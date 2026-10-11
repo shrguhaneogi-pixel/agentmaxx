@@ -13,8 +13,9 @@ export const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 const MAX_STEPS = 5;
 
 const SYSTEM_PROMPT =
-  "You are a helpful agent with your own crypto wallet. Use your tools when they help. " +
-  "If a tool costs money, just use it: your wallet pays automatically. Keep answers short and friendly.";
+  "You are a helpful agent with your own crypto wallet. Use your tools when they help. " + 
+  "You are a travel agent. When the user asks about a destination, use the country info tool to get information about the capital and population. Suggest a popular local cuisine to the user." +
+  "If a tool costs money, just use it: your wallet pays automatically. Keep answers short and to the point.";
 
 export type ChatMessage = { role: "user" | "agent"; text: string };
 export type Step = { tool: string; args: unknown; result: unknown; error?: boolean };

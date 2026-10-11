@@ -37,20 +37,8 @@ export const tools: Tool[] = [
       network: "Base Sepolia (testnet)",
     }),
   },
-
-  // ─── 3. A plain tool: no wallet, no API. Try changing this one first! ───
-  {
-    name: "roll_dice",
-    description: "Roll a dice with the given number of sides.",
-    parameters: {
-      type: "object",
-      properties: {
-        sides: { type: "number", description: "How many sides the dice has. Default 6." },
-      },
-    },
-    run: async ({ sides = 6 }) => ({ rolled: Math.floor(Math.random() * sides) + 1, sides }),
-  },
-
+  
+  // ─── 3. Get joke tool: Random jokes! ───
   {
     name: "get_joke",
     description: "Get a random joke. User wants a joke to be told.",
@@ -63,5 +51,35 @@ export const tools: Tool[] = [
       const joke = await response.json();
       return { setup: joke.setup, punchline: joke.punchline };
     },
+  },
+
+  // ─── 4. Country info tool: Get information about capital and population ───
+  {
+    name: "get_country_info",
+    description: "Get information about a country. User wants to know about the capital and population .",
+    parameters: {
+      type: "object",
+      properties: {
+        country: { 
+          type: "string", 
+          description: "Country name, e.g. India" 
+        },
+      },
+      required: ["country"],
+    },
+    run: async ({ country }) => {
+      const res = await fetch(
+        `https://restcountries.com/v3.1/name/${encodeURIComponent(country)}`
+      );
+
+      const [data] = await res.json();
+
+      return {
+        capital: data.capital?.[0],
+        population: data.population,
+        region: data.region,
+      };
+    },
   }
+
 ];
