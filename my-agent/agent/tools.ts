@@ -69,10 +69,11 @@ export const tools: Tool[] = [
     },
     run: async ({ country }) => {
       const res = await fetch(
-        `https://restcountries.com/v3.1/name/${encodeURIComponent(country)}`
+        `https://api.restcountries.com/countries/v5?name=${encodeURIComponent(country)}`,
+        {headers: { 'Authorization': 'Bearer rc_live_6ff2dad9093e4b07a258f0b1ebf86ca1' }}
       );
 
-      const [data] = await res.json();
+      const data = await res.json();
 
       return {
         capital: data.capital?.[0],

@@ -26,7 +26,7 @@ type Message = { role: "user" | "agent"; text: string; steps?: Step[]; error?: b
 type Status = { hasApiKey: boolean; model: string; tools: { name: string; description: string }[] };
 type WalletInfo = { address: string | null; balance?: string };
 
-const EXAMPLES = ["What's the weather in Mumbai?", "What's in your wallet?", "Roll a 20 sided dice"];
+const EXAMPLES = ["What's the weather in Mumbai?", "What's in your wallet?", "Tell Me a joke.", "Tell me about India."];
 
 export default function Home() {
   const [status, setStatus] = useState<Status | null>(null);
