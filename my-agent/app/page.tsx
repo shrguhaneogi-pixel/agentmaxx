@@ -21,7 +21,26 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-type Step = { tool: string; args: unknown; result: any; error?: boolean };
+type PaymentSummary = {
+  status?: number;
+  amount: string;
+  to: string;
+  signature: string;
+};
+
+type StepResult = {
+  payment?: PaymentSummary;
+  error?: string;
+  [key: string]: unknown;
+};
+
+type Step = {
+  tool: string;
+  args: unknown;
+  result: StepResult | unknown;
+  error?: boolean;
+};
+
 type Message = { role: "user" | "agent"; text: string; steps?: Step[]; error?: boolean };
 type Status = { hasApiKey: boolean; model: string; tools: { name: string; description: string }[] };
 type WalletInfo = { address: string | null; balance?: string };
@@ -39,20 +58,31 @@ export default function Home() {
 
   const loadWallet = () =>
     fetch("/api/wallet")
-      .then((r) => r.json())
-      .then(setWallet)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
+      .then((data: unknown) => {
+        if (typeof data === "object" && data !== null && "address" in data) {
+          const info = data as WalletInfo;
+          setWallet({
+            address: typeof info.address === "string" ? info.address : null,
+            balance: typeof info.balance === "string" ? info.balance : undefined,
+          });
+        } else {
+          setWallet({ address: null });
+        }
+      })
       .catch(() => setWallet({ address: null }));
 
   useEffect(() => {
     fetch("/api/agent")
-      .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
-      .then((data) =>
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
+      .then((data: unknown) => {
+        const obj = typeof data === "object" && data !== null ? (data as Record<string, unknown>) : {};
         setStatus({
-          hasApiKey: Boolean(data?.hasApiKey),
-          model: data?.model || "gemini-flash-latest",
-          tools: Array.isArray(data?.tools) ? data.tools : [],
-        })
-      )
+          hasApiKey: Boolean(obj.hasApiKey),
+          model: typeof obj.model === "string" ? obj.model : "gemini-flash-latest",
+          tools: Array.isArray(obj.tools) ? (obj.tools as { name: string; description: string }[]) : [],
+        });
+      })
       .catch(() => setStatus({ hasApiKey: false, model: "gemini-flash-latest", tools: [] }));
     loadWallet();
   }, []);
@@ -87,9 +117,14 @@ export default function Home() {
         body: JSON.stringify({ messages: history.filter((m) => !m.error).map(({ role, text }) => ({ role, text })) }),
       });
       const rawText = await res.text();
-      let data: any;
+      interface AgentApiResponse {
+        answer?: string;
+        error?: string;
+        steps?: Step[];
+      }
+      let data: AgentApiResponse;
       try {
-        data = JSON.parse(rawText);
+        data = JSON.parse(rawText) as AgentApiResponse;
       } catch {
         throw new Error(res.ok ? "Invalid response received from server." : `Server error (${res.status}): ${rawText.slice(0, 150)}`);
       }
@@ -99,13 +134,24 @@ export default function Home() {
           ? { role: "agent", text: data.error, error: true }
           : { role: "agent", text: data.answer || "No response received.", steps: data.steps },
       ]);
-      if (data.steps?.some((s: Step) => s.result?.payment)) loadWallet();
-    } catch (err: any) {
+      if (
+        data.steps?.some((s: Step) => {
+          const resObj = typeof s.result === "object" && s.result !== null ? (s.result as Record<string, unknown>) : null;
+          return Boolean(resObj?.payment);
+        })
+      ) {
+        loadWallet();
+      }
+    } catch (err: unknown) {
+      const messageText =
+        err instanceof Error
+          ? err.message
+          : "Could not reach the server. Please check your network connection or deployment status.";
       setMessages((m) => [
         ...m,
         {
           role: "agent",
-          text: err?.message || "Could not reach the server. Please check your network connection or deployment status.",
+          text: messageText,
           error: true,
         },
       ]);
@@ -113,6 +159,7 @@ export default function Home() {
       setThinking(false);
     }
   }
+
 
   const ready = Boolean(status?.hasApiKey);
 
@@ -331,9 +378,10 @@ function SetupStep(props: { number: number; title: string; done: boolean; last?:
 
 function WalletDetails({ wallet, onRefresh }: { wallet: WalletInfo; onRefresh: () => void }) {
   const [copied, setCopied] = useState(false);
-  const address = wallet.address!;
+  const address = wallet.address ?? "";
 
   function copy() {
+    if (!address) return;
     navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
@@ -369,7 +417,8 @@ function WalletDetails({ wallet, onRefresh }: { wallet: WalletInfo; onRefresh: (
 }
 
 function ToolCall({ step }: { step: Step }) {
-  const payment = step.result?.payment;
+  const resultObj = typeof step.result === "object" && step.result !== null ? (step.result as StepResult) : null;
+  const payment = resultObj?.payment;
   return (
     <Collapsible className="border font-mono text-xs">
       <CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted">
@@ -386,6 +435,7 @@ function ToolCall({ step }: { step: Step }) {
     </Collapsible>
   );
 }
+
 
 function Json({ label, value }: { label: string; value: unknown }) {
   return (

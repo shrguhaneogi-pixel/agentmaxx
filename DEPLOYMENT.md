@@ -15,7 +15,7 @@ This guide details the evaluation and steps required to take **Agentmaxx** to pr
 | **Serverless Timeout & Dynamic Route Config** | ✅ Resolved | Configured `export const maxDuration = 60` and `dynamic = "force-dynamic"` to give multi-step AI tool chains adequate execution time on serverless hosts. |
 | **Reverse Proxy / Origin Routing** | ✅ Resolved | Updated `app/api/agent/route.ts` to parse comma-separated multi-tier proxy headers (`x-forwarded-host`, `x-forwarded-proto`) and localhost/127.0.0.1 origins for reliable x402 tool calls. |
 | **Tool Robustness & API Deprecation Fix** | ✅ Resolved | Added an offline curated database for `get_country_info` (resolving REST Countries v1-v4 deprecation/shutdown) with capitals, populations, and cuisines; offline jokes fallback for `get_joke`; and Base Sepolia RPC timeout guards for `get_my_wallet`. |
-| **Monorepo / Root Setup** | ✅ Resolved | Configured root `package.json` with npm workspaces (`workspaces: ["my-agent"]`), proxy scripts (`build`, `dev`, `start`), and removed ghost dependencies. |
+| **Monorepo / Root Setup** | ✅ Resolved | Configured root `package.json` with proxy scripts (`build`, `dev`, `start`, `type-check`), eliminated parent workspace filter collision (`npm warn workspaces my-agent in filter set`), and removed orphaned root lockfile. |
 | **Environment Variable Security & Parsing** | ✅ Protected | Added `parsePrivateKey` to sanitize whitespace and ensure `0x` formatting. `.env` and `.agent-wallet.json` are strictly gitignored. |
 
 ---
@@ -112,4 +112,4 @@ CMD ["npm", "start"]
 - [x] Ensure origin baseUrl dynamically adapts to production domain and handles multi-tier proxy headers.
 - [x] Configure serverless timeout (`maxDuration = 60`) and `dynamic = "force-dynamic"` on API routes.
 - [x] Validate request body parsing and 400 Bad Request handling for malformed agent calls.
-- [x] Configure npm workspaces at repository root for unified monorepo management.
+- [x] Configure root package.json proxy scripts (`build`, `dev`, `start`, `type-check`) for clean monorepo management without parent workspace collisions.

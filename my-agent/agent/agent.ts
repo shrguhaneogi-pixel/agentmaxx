@@ -19,8 +19,12 @@ const SYSTEM_PROMPT =
 
 export type ChatMessage = { role: "user" | "agent"; text: string };
 export type Step = { tool: string; args: unknown; result: unknown; error?: boolean };
+export type AgentRunResult = { answer: string; steps: Step[] };
 
-export async function runAgent(history: ChatMessage[], ctx: { baseUrl: string }) {
+export async function runAgent(
+  history: ChatMessage[],
+  ctx: { baseUrl: string }
+): Promise<AgentRunResult> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const contents: Content[] = history.map((m) => ({
     role: m.role === "user" ? "user" : "model",
@@ -29,29 +33,49 @@ export async function runAgent(history: ChatMessage[], ctx: { baseUrl: string })
   const steps: Step[] = [];
 
   for (let i = 0; i < MAX_STEPS; i++) {
-    const response = await ai.models.generateContent({
-      model: MODEL,
-      contents,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        tools: [
-          {
-            functionDeclarations: tools.map((t) => ({
-              name: t.name,
-              description: t.description,
-              parametersJsonSchema: t.parameters,
-            })),
-          },
-        ],
-      },
-    });
+    let response;
+    const generateConfig = {
+      systemInstruction: SYSTEM_PROMPT,
+      tools: [
+        {
+          functionDeclarations: tools.map((t) => ({
+            name: t.name,
+            description: t.description,
+            parametersJsonSchema: t.parameters,
+          })),
+        },
+      ],
+    };
+
+    try {
+      response = await ai.models.generateContent({
+        model: MODEL,
+        contents,
+        config: generateConfig,
+      });
+    } catch (err: unknown) {
+      const errStr = String(err);
+      if (errStr.includes("503") || errStr.includes("UNAVAILABLE") || errStr.includes("429")) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        response = await ai.models.generateContent({
+          model: MODEL,
+          contents,
+          config: generateConfig,
+        });
+      } else {
+        throw err;
+      }
+    }
 
     const calls = response.functionCalls ?? [];
     if (calls.length === 0) {
-      const answer =
-        response.text ||
-        response.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join("\n") ||
-        "I completed your request.";
+      const parts = response.candidates?.[0]?.content?.parts;
+      const joinedParts = parts
+        ?.map((p: Part) => p.text)
+        .filter((t): t is string => Boolean(t))
+        .join("\n");
+
+      const answer = response.text || joinedParts || "I completed your request.";
       return { answer, steps };
     }
 
@@ -68,14 +92,15 @@ export async function runAgent(history: ChatMessage[], ctx: { baseUrl: string })
       const tool = tools.find((t) => t.name === toolName);
       let result: unknown;
       let error = false;
+      const toolArgs = (call.args && typeof call.args === "object" ? call.args : {}) as Record<string, unknown>;
       try {
         if (!tool) throw new Error(`No tool named ${toolName}`);
-        result = await tool.run(call.args ?? {}, ctx);
-      } catch (err) {
+        result = await tool.run(toolArgs, ctx);
+      } catch (err: unknown) {
         result = { error: err instanceof Error ? err.message : String(err) };
         error = true;
       }
-      steps.push({ tool: toolName, args: call.args ?? {}, result, error });
+      steps.push({ tool: toolName, args: toolArgs, result, error });
       results.push({ functionResponse: { id: call.id, name: toolName, response: { result } } });
     }
 
@@ -84,3 +109,4 @@ export async function runAgent(history: ChatMessage[], ctx: { baseUrl: string })
 
   return { answer: "I hit my step limit. Try a simpler question.", steps };
 }
+

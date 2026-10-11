@@ -1,12 +1,12 @@
-import { getWalletAddress, getWalletBalance, payAndFetch } from "./wallet";
+import { getWalletAddress, getWalletBalance, payAndFetch, type PaymentExecutionResult } from "./wallet";
 
 export type Tool = {
   name: string;
   description: string;
   /** JSON Schema describing the inputs. */
-  parameters: object;
+  parameters: Record<string, unknown>;
   /** The code that runs when the agent calls this tool. */
-  run: (args: any, ctx: { baseUrl: string }) => Promise<unknown>;
+  run: (args: Record<string, unknown>, ctx: { baseUrl: string }) => Promise<unknown>;
 };
 
 export const tools: Tool[] = [
@@ -21,10 +21,12 @@ export const tools: Tool[] = [
       },
       required: ["city"],
     },
-    run: async ({ city }, { baseUrl }) => {
+    run: async (args: Record<string, unknown>, { baseUrl }: { baseUrl: string }): Promise<PaymentExecutionResult> => {
+      const city = typeof args.city === "string" ? args.city : String(args.city ?? "Unknown");
       return payAndFetch(`${baseUrl}/api/weather?city=${encodeURIComponent(city)}`);
     },
   },
+
 
   // ─── 2. Wallet tool: read the agent's own wallet ───
   {
@@ -57,10 +59,15 @@ export const tools: Tool[] = [
     },
     run: async () => {
       try {
-        const response = await fetch("https://official-joke-api.appspot.com/random_joke");
+        const response = await fetch("https://official-joke-api.appspot.com/random_joke", {
+          signal: AbortSignal.timeout(4000),
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const joke = await response.json();
-        return { setup: joke.setup, punchline: joke.punchline };
+        const joke = (await response.json()) as { setup?: string; punchline?: string };
+        return {
+          setup: joke.setup ?? "Why do programmers prefer dark mode?",
+          punchline: joke.punchline ?? "Because light attracts bugs!",
+        };
       } catch {
         return {
           setup: "Why do programmers prefer dark mode?",
@@ -68,6 +75,7 @@ export const tools: Tool[] = [
         };
       }
     },
+
   },
 
   // ─── 4. Country info tool: Get information about capital and population ───
@@ -84,7 +92,8 @@ export const tools: Tool[] = [
       },
       required: ["country"],
     },
-    run: async ({ country }) => {
+    run: async (args: Record<string, unknown>) => {
+      const rawCountry = typeof args.country === "string" ? args.country : String(args.country ?? "");
       // Curated fast offline database for popular travel destinations and prompt examples
       const KNOWN_COUNTRIES: Record<string, { capital: string; population: string; region: string; cuisine?: string }> = {
         india: { capital: "New Delhi", population: "1,428,000,000", region: "Asia", cuisine: "Biryani, Butter Chicken, Masala Dosa" },
@@ -113,39 +122,41 @@ export const tools: Tool[] = [
         uae: { capital: "Abu Dhabi", population: "9,900,000", region: "Asia", cuisine: "Shawarma, Al Harees, Machboos" },
       };
 
-      const normalized = (country || "").trim().toLowerCase();
+      const normalized = rawCountry.trim().toLowerCase();
       if (KNOWN_COUNTRIES[normalized]) {
         return {
-          country,
+          country: rawCountry,
           ...KNOWN_COUNTRIES[normalized],
         };
       }
 
       try {
         const res = await fetch(
-          `https://restcountries.com/v3.1/name/${encodeURIComponent(country)}?fields=name,capital,population,region`
+          `https://restcountries.com/v3.1/name/${encodeURIComponent(rawCountry)}?fields=name,capital,population,region`,
+          { signal: AbortSignal.timeout(4000) }
         ).catch(() => null);
 
         if (res && res.ok) {
-          const raw = await res.json();
+          const raw: unknown = await res.json();
           if (Array.isArray(raw) && raw.length > 0) {
-            const data = raw[0];
+            const data = raw[0] as { capital?: unknown; population?: unknown; region?: unknown };
             return {
-              country,
-              capital: Array.isArray(data?.capital) ? data.capital[0] : data?.capital ?? "Unknown",
+              country: rawCountry,
+              capital: Array.isArray(data?.capital) ? String(data.capital[0]) : typeof data?.capital === "string" ? data.capital : "Unknown",
               population: data?.population ? Number(data.population).toLocaleString() : "Unknown",
-              region: data?.region ?? "Unknown",
+              region: typeof data?.region === "string" ? data.region : "Unknown",
             };
           }
         }
 
         return {
-          country,
-          error: `Could not retrieve live details for "${country}".`,
+          country: rawCountry,
+          error: `Could not retrieve live details for "${rawCountry}".`,
           suggestion: "Please check the country name spelling or try a major destination like India, France, or Japan.",
         };
-      } catch (err: any) {
-        return { country, error: err?.message || "Failed to fetch country info" };
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Failed to fetch country info";
+        return { country: rawCountry, error: message };
       }
     },
   }

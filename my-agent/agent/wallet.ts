@@ -20,17 +20,23 @@ import { createPublicClient, formatEther, http, verifyMessage, type Address, typ
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
-const CANDIDATE_WALLET_PATHS = [
-  path.join(process.cwd(), ".agent-wallet.json"),
-  path.join(process.cwd(), "my-agent", ".agent-wallet.json"),
-  path.join(os.tmpdir(), ".agent-wallet.json"),
-];
+const WALLET_TMP_PATH = path.join(os.tmpdir(), ".agent-wallet.json");
 
-const chain = createPublicClient({ chain: baseSepolia, transport: http() });
+const chain = createPublicClient({
+  chain: baseSepolia,
+  transport: http(undefined, { timeout: 10_000 }),
+});
 
-export type Payment = { from: Address; to: Address; amount: string; asset: string; resource: string; nonce: string };
+export type Payment = {
+  from: Address;
+  to: Address;
+  amount: string;
+  asset: string;
+  resource: string;
+  nonce: string;
+};
 
-// In-memory fallback if file system is completely unavailable
+// In-memory fallback if file system is completely unavailable or ephemeral
 let inMemoryPrivateKey: Hex | null = null;
 
 /** Safely parse and validate a 32-byte hex private key from environment or storage. */
@@ -45,7 +51,26 @@ function parsePrivateKey(key: string | undefined | null): Hex | null {
   return formatted;
 }
 
-/** The wallet from .env, .agent-wallet.json (cwd or tmpdir), or memory. */
+/** Helper to extract a validated private key from a JSON wallet file safely. */
+function readKeyFromFile(filePath: string): Hex | null {
+  try {
+    if (fs.existsSync(/*turbopackIgnore: true*/ filePath)) {
+      const fileContent = fs.readFileSync(/*turbopackIgnore: true*/ filePath, "utf8");
+      const parsed: unknown = JSON.parse(fileContent);
+      if (typeof parsed === "object" && parsed !== null && "privateKey" in parsed) {
+        const rawKey = (parsed as { privateKey: unknown }).privateKey;
+        if (typeof rawKey === "string") {
+          return parsePrivateKey(rawKey);
+        }
+      }
+    }
+  } catch {
+    // Continue to fallback
+  }
+  return null;
+}
+
+/** The wallet from .env, in-memory, or ephemeral storage. */
 function loadAccount() {
   const envKey = parsePrivateKey(process.env.WALLET_PRIVATE_KEY);
   if (envKey) {
@@ -64,15 +89,25 @@ function loadAccount() {
     }
   }
 
-  for (const filePath of CANDIDATE_WALLET_PATHS) {
+  // 1. Check ephemeral serverless storage in os.tmpdir()
+  const tmpKey = readKeyFromFile(WALLET_TMP_PATH);
+  if (tmpKey) {
     try {
-      if (fs.existsSync(filePath)) {
-        const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
-        const key = parsePrivateKey(parsed?.privateKey);
-        if (key) return privateKeyToAccount(key);
-      }
+      return privateKeyToAccount(tmpKey);
     } catch {
-      // Continue to next candidate path
+      // Ignore and fallback
+    }
+  }
+
+  // 2. Local development file fallback (scoped statically)
+  const localKey =
+    readKeyFromFile(path.join(process.cwd(), ".agent-wallet.json")) ??
+    readKeyFromFile(path.join(process.cwd(), "my-agent", ".agent-wallet.json"));
+  if (localKey) {
+    try {
+      return privateKeyToAccount(localKey);
+    } catch {
+      // Ignore and fallback
     }
   }
 
@@ -85,50 +120,57 @@ function requireAccount() {
   return account;
 }
 
-/** Make a brand new wallet and persist it across standard or serverless filesystems. */
-export function createWallet() {
+/** Make a brand new wallet and persist it in-memory and ephemerally in os.tmpdir(). */
+export function createWallet(): Address {
   const existing = loadAccount();
   if (existing) return existing.address;
 
   const privateKey = generatePrivateKey();
   inMemoryPrivateKey = privateKey;
 
-  // Attempt saving to cwd first, then to os.tmpdir() for serverless runtimes
-  let saved = false;
-  for (const filePath of CANDIDATE_WALLET_PATHS) {
-    try {
-      fs.writeFileSync(filePath, JSON.stringify({ privateKey }, null, 2));
-      saved = true;
-      break;
-    } catch {
-      // Continue to try next candidate path (e.g., /tmp)
-    }
+  // Persist ephemerally to os.tmpdir() to avoid read-only filesystem violations on serverless runtimes
+  try {
+    fs.writeFileSync(/*turbopackIgnore: true*/ WALLET_TMP_PATH, JSON.stringify({ privateKey }, null, 2));
+  } catch {
+    // Ephemeral in-memory fallback already holds the private key
   }
 
   return privateKeyToAccount(privateKey).address;
 }
 
-export function getWalletAddress() {
+export function getWalletAddress(): Address | null {
   return loadAccount()?.address ?? null;
 }
 
-export async function getWalletBalance() {
+export async function getWalletBalance(): Promise<string> {
   const account = requireAccount();
   const wei = await chain.getBalance({ address: account.address });
   return `${formatEther(wei)} ETH`;
 }
 
+export interface PaymentExecutionResult {
+  data: unknown;
+  payment?: {
+    status: number;
+    amount: string;
+    to: Address;
+    signature: string;
+  };
+}
+
 /** Fetch a URL. If it asks for payment (402), sign one with the wallet and try again. */
-export async function payAndFetch(url: string) {
+export async function payAndFetch(url: string): Promise<PaymentExecutionResult> {
   const first = await fetch(url);
   if (first.status !== 402) {
     if (!first.ok) throw new Error(`API request failed: ${first.status} ${first.statusText}`);
-    return { data: await first.json() };
+    return { data: (await first.json()) as unknown };
   }
 
   const account = requireAccount();
-  const paymentOffer = await first.json().catch(() => ({}));
-  const { price = "0.01", asset = "USDC", payTo = "0x000000000000000000000000000000000000dEaD" } = paymentOffer;
+  const paymentOffer = (await first.json().catch(() => ({}))) as Record<string, unknown>;
+  const price = typeof paymentOffer.price === "string" ? paymentOffer.price : "0.01";
+  const asset = typeof paymentOffer.asset === "string" ? paymentOffer.asset : "USDC";
+  const payTo = (typeof paymentOffer.payTo === "string" ? paymentOffer.payTo : "0x000000000000000000000000000000000000dEaD") as Address;
 
   const payment: Payment = {
     from: account.address,
@@ -142,7 +184,7 @@ export async function payAndFetch(url: string) {
   const header = Buffer.from(JSON.stringify({ payment, signature })).toString("base64");
 
   const paid = await fetch(url, { headers: { "X-PAYMENT": header } });
-  const data = await paid.json().catch(async () => {
+  const data: unknown = await paid.json().catch(async () => {
     const text = await paid.text().catch(() => "");
     return { error: text || `HTTP ${paid.status}` };
   });
@@ -154,16 +196,28 @@ export async function payAndFetch(url: string) {
 }
 
 /** Used by the API: is this X-PAYMENT header a real, signed payment? */
-export async function verifyPayment(header: string | null) {
+export async function verifyPayment(header: string | null): Promise<Payment | null> {
   if (!header) return null;
   try {
-    const { payment, signature } = JSON.parse(Buffer.from(header, "base64").toString()) as {
-      payment: Payment;
-      signature: Hex;
-    };
+    const parsed: unknown = JSON.parse(Buffer.from(header, "base64").toString());
+    if (typeof parsed !== "object" || parsed === null) return null;
+
+    const record = parsed as Record<string, unknown>;
+    if (!record.payment || typeof record.payment !== "object" || !record.signature || typeof record.signature !== "string") {
+      return null;
+    }
+
+    const payment = record.payment as Payment;
+    const signature = record.signature as Hex;
+
+    if (!payment.from || !payment.to || !payment.amount || !payment.asset) {
+      return null;
+    }
+
     const valid = await verifyMessage({ address: payment.from, message: JSON.stringify(payment), signature });
     return valid ? payment : null;
   } catch {
     return null;
   }
 }
+
