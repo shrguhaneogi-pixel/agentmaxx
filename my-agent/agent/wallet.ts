@@ -14,20 +14,69 @@
  * Payments here are signed but NOT sent on-chain (it's a demo, no real money).
  */
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { createPublicClient, formatEther, http, verifyMessage, type Address, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
-const WALLET_FILE = path.join(process.cwd(), ".agent-wallet.json");
+const CANDIDATE_WALLET_PATHS = [
+  path.join(process.cwd(), ".agent-wallet.json"),
+  path.join(process.cwd(), "my-agent", ".agent-wallet.json"),
+  path.join(os.tmpdir(), ".agent-wallet.json"),
+];
+
 const chain = createPublicClient({ chain: baseSepolia, transport: http() });
 
 export type Payment = { from: Address; to: Address; amount: string; asset: string; resource: string; nonce: string };
 
-/** The wallet from .env or .agent-wallet.json, or null if none was created yet. */
+// In-memory fallback if file system is completely unavailable
+let inMemoryPrivateKey: Hex | null = null;
+
+/** Safely parse and validate a 32-byte hex private key from environment or storage. */
+function parsePrivateKey(key: string | undefined | null): Hex | null {
+  if (!key) return null;
+  const trimmed = key.trim();
+  if (!trimmed) return null;
+  const formatted = (trimmed.startsWith("0x") ? trimmed : `0x${trimmed}`) as Hex;
+  if (!/^0x[0-9a-fA-F]{64}$/.test(formatted)) {
+    return null;
+  }
+  return formatted;
+}
+
+/** The wallet from .env, .agent-wallet.json (cwd or tmpdir), or memory. */
 function loadAccount() {
-  const key = process.env.WALLET_PRIVATE_KEY || (fs.existsSync(WALLET_FILE) && JSON.parse(fs.readFileSync(WALLET_FILE, "utf8")).privateKey);
-  return key ? privateKeyToAccount(key as Hex) : null;
+  const envKey = parsePrivateKey(process.env.WALLET_PRIVATE_KEY);
+  if (envKey) {
+    try {
+      return privateKeyToAccount(envKey);
+    } catch {
+      // Ignore invalid env key and fallback
+    }
+  }
+
+  if (inMemoryPrivateKey) {
+    try {
+      return privateKeyToAccount(inMemoryPrivateKey);
+    } catch {
+      // Ignore and fallback
+    }
+  }
+
+  for (const filePath of CANDIDATE_WALLET_PATHS) {
+    try {
+      if (fs.existsSync(filePath)) {
+        const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+        const key = parsePrivateKey(parsed?.privateKey);
+        if (key) return privateKeyToAccount(key);
+      }
+    } catch {
+      // Continue to next candidate path
+    }
+  }
+
+  return null;
 }
 
 function requireAccount() {
@@ -36,11 +85,26 @@ function requireAccount() {
   return account;
 }
 
-/** Make a brand new wallet and save it. */
+/** Make a brand new wallet and persist it across standard or serverless filesystems. */
 export function createWallet() {
-  if (loadAccount()) return getWalletAddress();
+  const existing = loadAccount();
+  if (existing) return existing.address;
+
   const privateKey = generatePrivateKey();
-  fs.writeFileSync(WALLET_FILE, JSON.stringify({ privateKey }, null, 2));
+  inMemoryPrivateKey = privateKey;
+
+  // Attempt saving to cwd first, then to os.tmpdir() for serverless runtimes
+  let saved = false;
+  for (const filePath of CANDIDATE_WALLET_PATHS) {
+    try {
+      fs.writeFileSync(filePath, JSON.stringify({ privateKey }, null, 2));
+      saved = true;
+      break;
+    } catch {
+      // Continue to try next candidate path (e.g., /tmp)
+    }
+  }
+
   return privateKeyToAccount(privateKey).address;
 }
 
@@ -49,17 +113,23 @@ export function getWalletAddress() {
 }
 
 export async function getWalletBalance() {
-  const wei = await chain.getBalance({ address: requireAccount().address });
+  const account = requireAccount();
+  const wei = await chain.getBalance({ address: account.address });
   return `${formatEther(wei)} ETH`;
 }
 
 /** Fetch a URL. If it asks for payment (402), sign one with the wallet and try again. */
 export async function payAndFetch(url: string) {
   const first = await fetch(url);
-  if (first.status !== 402) return { data: await first.json() };
+  if (first.status !== 402) {
+    if (!first.ok) throw new Error(`API request failed: ${first.status} ${first.statusText}`);
+    return { data: await first.json() };
+  }
 
   const account = requireAccount();
-  const { price, asset, payTo } = await first.json();
+  const paymentOffer = await first.json().catch(() => ({}));
+  const { price = "0.01", asset = "USDC", payTo = "0x000000000000000000000000000000000000dEaD" } = paymentOffer;
+
   const payment: Payment = {
     from: account.address,
     to: payTo,
@@ -72,8 +142,13 @@ export async function payAndFetch(url: string) {
   const header = Buffer.from(JSON.stringify({ payment, signature })).toString("base64");
 
   const paid = await fetch(url, { headers: { "X-PAYMENT": header } });
+  const data = await paid.json().catch(async () => {
+    const text = await paid.text().catch(() => "");
+    return { error: text || `HTTP ${paid.status}` };
+  });
+
   return {
-    data: await paid.json(),
+    data,
     payment: { status: paid.status, amount: `${price} ${asset}`, to: payTo, signature: `${signature.slice(0, 18)}...` },
   };
 }

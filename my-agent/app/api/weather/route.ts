@@ -6,6 +6,8 @@
  */
 import { verifyPayment } from "@/agent/wallet";
 
+export const dynamic = "force-dynamic";
+
 const PRICE = "0.01";
 const ASSET = "USDC";
 const PAY_TO = "0x000000000000000000000000000000000000dEaD"; // the API owner's wallet (demo)

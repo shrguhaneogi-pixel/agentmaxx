@@ -37,10 +37,23 @@ export default function Home() {
   const [creating, setCreating] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const loadWallet = () => fetch("/api/wallet").then((r) => r.json()).then(setWallet);
+  const loadWallet = () =>
+    fetch("/api/wallet")
+      .then((r) => r.json())
+      .then(setWallet)
+      .catch(() => setWallet({ address: null }));
 
   useEffect(() => {
-    fetch("/api/agent").then((r) => r.json()).then(setStatus);
+    fetch("/api/agent")
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.statusText)))
+      .then((data) =>
+        setStatus({
+          hasApiKey: Boolean(data?.hasApiKey),
+          model: data?.model || "gemini-flash-latest",
+          tools: Array.isArray(data?.tools) ? data.tools : [],
+        })
+      )
+      .catch(() => setStatus({ hasApiKey: false, model: "gemini-flash-latest", tools: [] }));
     loadWallet();
   }, []);
 
@@ -50,9 +63,14 @@ export default function Home() {
 
   async function createWallet() {
     setCreating(true);
-    await fetch("/api/wallet", { method: "POST" });
-    await loadWallet();
-    setCreating(false);
+    try {
+      await fetch("/api/wallet", { method: "POST" });
+      await loadWallet();
+    } catch (err) {
+      console.error("Wallet creation error:", err);
+    } finally {
+      setCreating(false);
+    }
   }
 
   async function send(text: string) {
@@ -68,13 +86,32 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history.filter((m) => !m.error).map(({ role, text }) => ({ role, text })) }),
       });
-      const data = await res.json();
-      setMessages((m) => [...m, data.error ? { role: "agent", text: data.error, error: true } : { role: "agent", text: data.answer, steps: data.steps }]);
+      const rawText = await res.text();
+      let data: any;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        throw new Error(res.ok ? "Invalid response received from server." : `Server error (${res.status}): ${rawText.slice(0, 150)}`);
+      }
+      setMessages((m) => [
+        ...m,
+        data.error
+          ? { role: "agent", text: data.error, error: true }
+          : { role: "agent", text: data.answer || "No response received.", steps: data.steps },
+      ]);
       if (data.steps?.some((s: Step) => s.result?.payment)) loadWallet();
-    } catch {
-      setMessages((m) => [...m, { role: "agent", text: "Could not reach the server. Is `npm run dev` still running?", error: true }]);
+    } catch (err: any) {
+      setMessages((m) => [
+        ...m,
+        {
+          role: "agent",
+          text: err?.message || "Could not reach the server. Please check your network connection or deployment status.",
+          error: true,
+        },
+      ]);
+    } finally {
+      setThinking(false);
     }
-    setThinking(false);
   }
 
   const ready = Boolean(status?.hasApiKey);
@@ -141,7 +178,7 @@ export default function Home() {
               <SectionTitle num="02" title="Tools" />
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-              {status?.tools.map((t) => (
+              {status?.tools?.map((t) => (
                 <div key={t.name}>
                   <p className="font-mono text-sm">
                     <span className="text-primary">&gt;</span> {t.name}

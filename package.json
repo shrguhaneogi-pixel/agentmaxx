@@ -1,5 +1,14 @@
 {
-  "dependencies": {
-    "agentmaxxin": "^0.1.0"
+  "name": "agentmaxx",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "my-agent"
+  ],
+  "scripts": {
+    "dev": "npm run dev --prefix my-agent",
+    "build": "npm run build --prefix my-agent",
+    "start": "npm run start --prefix my-agent"
   }
 }
+

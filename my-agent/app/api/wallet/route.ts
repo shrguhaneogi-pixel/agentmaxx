@@ -1,5 +1,7 @@
 import { createWallet, getWalletAddress, getWalletBalance } from "@/agent/wallet";
 
+export const dynamic = "force-dynamic";
+
 // GET /api/wallet -> the agent's wallet address and balance (or null if none yet)
 export async function GET() {
   const address = getWalletAddress();
