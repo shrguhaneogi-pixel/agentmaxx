@@ -1,13 +1,3 @@
-/**
- * YOUR AGENT'S TOOLS
- *
- * A tool is just a function the agent is allowed to call.
- * Gemini reads the `description` to decide WHEN to use it,
- * and `parameters` to know WHAT to pass in.
- *
- * Add your own tool: copy one of the objects below, change it,
- * and save. It shows up in the "Tools" list on the page.
- */
 import { getWalletAddress, getWalletBalance, payAndFetch } from "./wallet";
 
 export type Tool = {
@@ -60,4 +50,18 @@ export const tools: Tool[] = [
     },
     run: async ({ sides = 6 }) => ({ rolled: Math.floor(Math.random() * sides) + 1, sides }),
   },
+
+  {
+    name: "get_joke",
+    description: "Get a random joke. User wants a joke to be told.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+    run: async () => {
+      const response = await fetch("https://official-joke-api.appspot.com/random_joke");
+      const joke = await response.json();
+      return { setup: joke.setup, punchline: joke.punchline };
+    },
+  }
 ];
