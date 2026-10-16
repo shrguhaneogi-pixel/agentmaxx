@@ -21,6 +21,7 @@ import {
   type Item,
   type Mood,
 } from "../agent/bazaar";
+import { tools } from "../agent/tools";
 
 describe("Marzban Bazaar Merchant Engine", () => {
   beforeEach(() => {
@@ -491,6 +492,222 @@ describe("Marzban Bazaar Merchant Engine", () => {
       const statusJson = JSON.stringify(status);
       assert.ok(!statusJson.includes("privateCost"), "Stall status JSON must NOT contain privateCost");
       assert.ok(!statusJson.includes("threshold"), "Stall status JSON must NOT contain threshold");
+    });
+  });
+
+  describe("Exhaustive Floor-Privacy Invariant Suite", () => {
+    const wares = [
+      { id: "brass-astrolabe", base: 120, cost: 60 },
+      { id: "saffron-tin", base: 45, cost: 20 },
+      { id: "silk-scarf", base: 70, cost: 30 },
+      { id: "haunted-lamp", base: 90, cost: 25 },
+      { id: "spice-box", base: 55, cost: 28 },
+      { id: "map-scroll", base: 35, cost: 5 },
+    ];
+    const moods: Mood[] = ["cheerful", "neutral", "grumpy"];
+
+    it("guarantees counter price is strictly above private threshold for every ware and mood across all offers", () => {
+      for (const ware of wares) {
+        for (const mood of moods) {
+          resetStall(mood);
+          const item = getItem(ware.id)!;
+          const threshold = getPrivateAcceptanceThreshold(item, mood);
+
+          // Test integer offers from 1 up to basePrice
+          for (let offer = 1; offer < ware.base; offer++) {
+            resetStall(mood);
+            const currentItem = getItem(ware.id)!;
+            const res = haggle(ware.id, offer);
+
+            if (res.status === "counter") {
+              assert.ok(
+                res.counterPrice !== undefined && res.counterPrice > threshold,
+                `Counter price (${res.counterPrice}) must be strictly > threshold (${threshold}) for ${ware.id} in ${mood} mood on offer ${offer}`
+              );
+              assert.ok(
+                res.counterPrice <= ware.base,
+                `Counter price (${res.counterPrice}) must not exceed base price (${ware.base})`
+              );
+              assert.ok(
+                res.counterPrice < currentItem.basePrice,
+                `Counter price (${res.counterPrice}) should concede from base price (${currentItem.basePrice})`
+              );
+              // Ensure no private cost or threshold leaked
+              const resRecord = (res as unknown) as Record<string, unknown>;
+              assert.equal(resRecord.privateCost, undefined);
+              assert.equal(resRecord.threshold, undefined);
+              assert.equal(resRecord.privateFloor, undefined);
+            } else if (res.status === "accepted") {
+              assert.ok(
+                offer >= threshold,
+                `Offer ${offer} was accepted but was below threshold ${threshold} for ${ware.id} in ${mood}`
+              );
+            }
+          }
+        }
+      }
+    });
+
+    it("verifies exact boundary condition: threshold - 1 is never accepted and counter > threshold", () => {
+      for (const ware of wares) {
+        for (const mood of moods) {
+          resetStall(mood);
+          const item = getItem(ware.id)!;
+          const threshold = getPrivateAcceptanceThreshold(item, mood);
+
+          const subThresholdOffer = threshold - 1;
+          if (subThresholdOffer > 0) {
+            const res = haggle(ware.id, subThresholdOffer);
+            assert.notEqual(
+              res.status,
+              "accepted",
+              `Offer ${subThresholdOffer} (threshold - 1) must NEVER be accepted`
+            );
+            if (res.status === "counter") {
+              assert.ok(
+                res.counterPrice! > threshold,
+                `Counter price ${res.counterPrice} must be strictly > threshold ${threshold}`
+              );
+            }
+          }
+
+          // Exact threshold offer MUST be accepted
+          resetStall(mood);
+          const exactRes = haggle(ware.id, threshold);
+          assert.equal(
+            exactRes.status,
+            "accepted",
+            `Offer at exact threshold ${threshold} must be accepted for ${ware.id} in ${mood}`
+          );
+        }
+      }
+    });
+
+    it("caps agreedPrice at current asking price if offer exceeds asking price", () => {
+      const astrolabe = getItem("brass-astrolabe")!;
+      // Offer 200 silver for 120 base astrolabe
+      const res = haggle("brass-astrolabe", 200);
+      assert.equal(res.status, "accepted");
+      assert.equal(res.agreedPrice, astrolabe.basePrice, "Agreed price must not exceed asking price");
+    });
+  });
+
+  describe("Bazaar Tools Integration & Dispatcher Execution", () => {
+    it("registers all required tools in agent/tools.ts", () => {
+      const toolNames = tools.map((t) => t.name);
+      assert.ok(toolNames.includes("list_wares"), "list_wares tool must be registered");
+      assert.ok(toolNames.includes("haggle_offer"), "haggle_offer tool must be registered");
+      assert.ok(toolNames.includes("pay_invoice"), "pay_invoice tool must be registered");
+      assert.ok(toolNames.includes("get_receipt"), "get_receipt tool must be registered");
+      assert.ok(toolNames.includes("get_stall_status"), "get_stall_status tool must be registered");
+      assert.ok(toolNames.includes("get_my_wallet"), "get_my_wallet tool must be registered");
+      assert.ok(toolNames.includes("get_weather"), "get_weather tool must be preserved");
+    });
+
+    it("executes list_wares tool properly and hides all private fields", async () => {
+      const tool = tools.find((t) => t.name === "list_wares")!;
+      const result = ((await tool.run({}, { baseUrl: "http://localhost:3000" })) as unknown) as {
+        wares: Array<Record<string, unknown>>;
+      };
+      assert.ok(Array.isArray(result.wares));
+      assert.equal(result.wares.length, 6);
+      for (const w of result.wares) {
+        assert.equal(w.privateCost, undefined);
+        assert.equal(w.threshold, undefined);
+        assert.ok(typeof w.askingPrice === "number");
+      }
+    });
+
+    it("executes haggle_offer tool properly for valid and invalid inputs", async () => {
+      const tool = tools.find((t) => t.name === "haggle_offer")!;
+      // Valid offer
+      const res = ((await tool.run(
+        { itemId: "saffron-tin", offer: 30 },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(res.status, "accepted");
+      assert.ok(typeof res.dealId === "string");
+
+      // Invalid offer (non-integer string)
+      const errRes = ((await tool.run(
+        { itemId: "saffron-tin", offer: "cheap" },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(errRes.status, "error");
+    });
+
+    it("executes pay_invoice tool and enforces conservative buyer confirmation gate", async () => {
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+
+      // Create a pending deal
+      const res = haggle("haunted-lamp", 60);
+      assert.equal(res.status, "accepted");
+      const dealId = res.dealId!;
+
+      // 1. Tool call without buyer confirmation
+      const unconfirmedRes = ((await payTool.run(
+        { dealId },
+        {
+          baseUrl: "http://localhost:3000",
+          lastUserMessage: "What is the weather?",
+        }
+      )) as unknown) as Record<string, unknown>;
+      assert.ok(unconfirmedRes.error, "Should error when unconfirmed");
+      assert.equal(unconfirmedRes.buyerConfirmationRequired, true);
+
+      // 2. Tool call with buyer hesitation
+      const hesitationRes = ((await payTool.run(
+        { dealId },
+        {
+          baseUrl: "http://localhost:3000",
+          lastUserMessage: "Wait, don't pay yet!",
+        }
+      )) as unknown) as Record<string, unknown>;
+      assert.ok(hesitationRes.error);
+      assert.equal(hesitationRes.buyerConfirmationRequired, true);
+
+      // 3. Tool call with missing dealId
+      const missingRes = ((await payTool.run(
+        {},
+        {
+          baseUrl: "http://localhost:3000",
+          lastUserMessage: "Yes, checkout",
+        }
+      )) as unknown) as Record<string, unknown>;
+      assert.match(String(missingRes.error), /dealId/i);
+    });
+
+    it("executes get_receipt and get_stall_status tools", async () => {
+      const stallTool = tools.find((t) => t.name === "get_stall_status")!;
+      const receiptTool = tools.find((t) => t.name === "get_receipt")!;
+
+      const statusRes = ((await stallTool.run({}, { baseUrl: "http://localhost:3000" })) as unknown) as Record<
+        string,
+        unknown
+      >;
+      assert.ok(["cheerful", "neutral", "grumpy"].includes(String(statusRes.mood)));
+      assert.ok(Array.isArray(statusRes.wares));
+
+      // With no completed purchases
+      const emptyReceipt = ((await receiptTool.run({}, { baseUrl: "http://localhost:3000" })) as unknown) as Record<
+        string,
+        unknown
+      >;
+      assert.match(String(emptyReceipt.error), /no completed purchase/i);
+
+      // Complete a purchase manually and verify tool retrieval
+      const haggleRes = haggle("map-scroll", 20);
+      assert.equal(haggleRes.status, "accepted");
+      const dealId = haggleRes.dealId!;
+      completePayment(dealId, "0xMockBuyerAddress");
+
+      const completedReceipt = ((await receiptTool.run(
+        { dealId },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(completedReceipt.dealId, dealId);
+      assert.equal(completedReceipt.itemId, "map-scroll");
+      assert.equal(completedReceipt.status, "completed");
     });
   });
 });
