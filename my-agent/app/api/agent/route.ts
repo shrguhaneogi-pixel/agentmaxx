@@ -22,6 +22,7 @@ interface AgentSuccessResponse {
 
 interface AgentRequestBody {
   messages?: unknown;
+  confirmedDealId?: unknown;
 }
 
 // GET /api/agent -> setup status + the list of tools (shown on the page)
@@ -85,8 +86,10 @@ export async function POST(
     const proto = forwardedProto || (isLocal ? "http" : "https");
 
     const baseUrl = `${proto}://${host}`;
+    const confirmedDealId =
+      typeof body.confirmedDealId === "string" ? body.confirmedDealId : undefined;
 
-    const result = await runAgent(messages, { baseUrl });
+    const result = await runAgent(messages, { baseUrl, confirmedDealId });
     return NextResponse.json(result);
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);

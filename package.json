@@ -6,6 +6,7 @@
     "dev": "npm run dev --prefix my-agent",
     "build": "npm run build --prefix my-agent",
     "start": "npm run start --prefix my-agent",
-    "type-check": "npm run type-check --prefix my-agent"
+    "type-check": "npm run type-check --prefix my-agent",
+    "test": "npm run test --prefix my-agent"
   }
 }

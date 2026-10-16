@@ -1,4 +1,21 @@
+import {
+  beginPayment,
+  failPayment,
+  getReceipt,
+  getStallStatus,
+  haggle,
+  listWares,
+  verifyBuyerConfirmation,
+} from "./bazaar";
 import { getWalletAddress, getWalletBalance, payAndFetch, type PaymentExecutionResult } from "./wallet";
+
+export type ToolContext = {
+  baseUrl: string;
+  messages?: Array<{ role: "user" | "agent"; text: string }>;
+  lastUserMessage?: string;
+  confirmedDealId?: string;
+  turnStartTime?: number;
+};
 
 export type Tool = {
   name: string;
@@ -6,11 +23,191 @@ export type Tool = {
   /** JSON Schema describing the inputs. */
   parameters: Record<string, unknown>;
   /** The code that runs when the agent calls this tool. */
-  run: (args: Record<string, unknown>, ctx: { baseUrl: string }) => Promise<unknown>;
+  run: (args: Record<string, unknown>, ctx: ToolContext) => Promise<unknown>;
 };
 
 export const tools: Tool[] = [
-  // ─── 1. A paid API: the agent's wallet signs a payment to unlock it ───
+  // ─── BAZAAR TOOL 1: Browse Wares ───
+  {
+    name: "list_wares",
+    description:
+      "Browse all wares currently offered in Marzban's bazaar stall, including description, base price, public asking price, availability, and remaining negotiation rounds.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+    run: async () => {
+      return { wares: listWares() };
+    },
+  },
+
+  // ─── BAZAAR TOOL 2: Haggle Offer ───
+  {
+    name: "haggle_offer",
+    description:
+      "Submit an offer in silver for an item in Marzban's bazaar. Required parameters: itemId (string) and offer (positive integer amount of silver).",
+    parameters: {
+      type: "object",
+      properties: {
+        itemId: {
+          type: "string",
+          description:
+            "The unique ID of the item (e.g. 'brass-astrolabe', 'saffron-tin', 'silk-scarf', 'haunted-lamp', 'spice-box', 'map-scroll').",
+        },
+        offer: {
+          type: "integer",
+          description: "The amount of silver offered by the buyer (must be a positive integer).",
+        },
+      },
+      required: ["itemId", "offer"],
+    },
+    run: async (args: Record<string, unknown>) => {
+      const itemId = typeof args.itemId === "string" ? args.itemId : String(args.itemId ?? "");
+      const rawOffer = typeof args.offer === "number" ? args.offer : Number(args.offer);
+      return haggle(itemId, rawOffer);
+    },
+  },
+
+  // ─── BAZAAR TOOL 3: Pay Invoice (Checkout) ───
+  {
+    name: "pay_invoice",
+    description:
+      "Request the mock bazaar checkout for an agreed deal using the agent's wallet. Required parameter: dealId. Explicit buyer confirmation in the current conversation turn is required before calling this tool.",
+    parameters: {
+      type: "object",
+      properties: {
+        dealId: {
+          type: "string",
+          description: "The ID of the pending agreed deal (e.g. 'deal-xxxxxxxx').",
+        },
+      },
+      required: ["dealId"],
+    },
+    run: async (args: Record<string, unknown>, ctx: ToolContext) => {
+      const dealId = typeof args.dealId === "string" ? args.dealId : String(args.dealId ?? "");
+      if (!dealId) {
+        return { error: "Missing required parameter: dealId" };
+      }
+
+      // Enforce the conservative authorization gate
+      const auth = verifyBuyerConfirmation(dealId, ctx);
+      if (!auth.authorized) {
+        return {
+          error: `Payment authorization denied: ${auth.reason}`,
+          dealId,
+          buyerConfirmationRequired: true,
+          hint: "Ask the buyer for explicit confirmation before proceeding to checkout.",
+        };
+      }
+
+      // Check deal and guard against concurrent payment attempts
+      const beginRes = beginPayment(dealId);
+      if (!beginRes.ok) {
+        return { error: beginRes.error, dealId };
+      }
+
+      try {
+        const checkoutUrl = `${ctx.baseUrl}/api/bazaar/checkout?dealId=${encodeURIComponent(dealId)}`;
+        const result: PaymentExecutionResult = await payAndFetch(checkoutUrl);
+        const data = (result.data && typeof result.data === "object" ? result.data : {}) as Record<
+          string,
+          unknown
+        >;
+
+        if (Boolean(data.success) && (!result.payment || result.payment.status === 200)) {
+          return {
+            success: true,
+            dealId,
+            receiptId: data.receiptId,
+            details: data,
+            payment: result.payment,
+            message: "Payment successfully signed and verified. Deal is completed.",
+          };
+        } else {
+          failPayment(dealId, "Payment failed or was rejected by checkout endpoint");
+          return {
+            error: "Checkout payment failed or was not accepted by endpoint. The item remains reserved.",
+            details: data,
+            payment: result.payment,
+          };
+        }
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        failPayment(dealId, msg);
+        return {
+          error: `Payment network failure: ${msg}. The item remains reserved.`,
+          dealId,
+        };
+      }
+    },
+  },
+
+  // ─── BAZAAR TOOL 4: Get Receipt ───
+  {
+    name: "get_receipt",
+    description:
+      "Retrieve a receipt for a completed bazaar purchase by dealId, receiptId, or itemId, or retrieve the most recent receipt if unspecified.",
+    parameters: {
+      type: "object",
+      properties: {
+        receiptId: {
+          type: "string",
+          description: "Optional receipt ID (e.g. 'rcpt-xxxxxxxx').",
+        },
+        dealId: {
+          type: "string",
+          description: "Optional deal ID (e.g. 'deal-xxxxxxxx').",
+        },
+        itemId: {
+          type: "string",
+          description: "Optional item ID (e.g. 'brass-astrolabe').",
+        },
+      },
+    },
+    run: async (args: Record<string, unknown>) => {
+      const identifier =
+        (typeof args.receiptId === "string" && args.receiptId) ||
+        (typeof args.dealId === "string" && args.dealId) ||
+        (typeof args.itemId === "string" && args.itemId) ||
+        undefined;
+      const receipt = getReceipt(identifier);
+      if (!receipt) {
+        return {
+          error: identifier
+            ? `No completed purchase receipt found for identifier "${identifier}".`
+            : "No completed purchases or receipts on record in the bazaar stall.",
+        };
+      }
+      return {
+        receiptId: receipt.id,
+        dealId: receipt.dealId,
+        itemId: receipt.itemId,
+        itemName: receipt.itemName,
+        silverPrice: receipt.silverPrice,
+        payer: receipt.payer,
+        timestamp: receipt.timestamp,
+        txHash: receipt.txHash,
+        status: "completed",
+        summary: `Receipt ${receipt.id}: Purchased ${receipt.itemName} for ${receipt.silverPrice} silver. Signed test payment verified on Base Sepolia.`,
+      };
+    },
+  },
+
+  // ─── BAZAAR TOOL 5: Get Stall Status ───
+  {
+    name: "get_stall_status",
+    description:
+      "Refresh and inspect Marzban's current stall status, including current mood, remaining negotiation rounds per item, and active pending deals.",
+    parameters: {
+      type: "object",
+      properties: {},
+    },
+    run: async () => {
+      return getStallStatus();
+    },
+  },
+
+  // ─── 6. A paid API: the agent's wallet signs a payment to unlock it ───
   {
     name: "get_weather",
     description: "Get the current weather for a city. Costs 0.01 USDC, paid automatically from the agent's wallet.",
@@ -21,14 +218,13 @@ export const tools: Tool[] = [
       },
       required: ["city"],
     },
-    run: async (args: Record<string, unknown>, { baseUrl }: { baseUrl: string }): Promise<PaymentExecutionResult> => {
+    run: async (args: Record<string, unknown>, { baseUrl }: ToolContext): Promise<PaymentExecutionResult> => {
       const city = typeof args.city === "string" ? args.city : String(args.city ?? "Unknown");
       return payAndFetch(`${baseUrl}/api/weather?city=${encodeURIComponent(city)}`);
     },
   },
 
-
-  // ─── 2. Wallet tool: read the agent's own wallet ───
+  // ─── 7. Wallet tool: read the agent's own wallet ───
   {
     name: "get_my_wallet",
     description: "Get the agent's own wallet address and its ETH balance on Base Sepolia (testnet).",
@@ -48,8 +244,8 @@ export const tools: Tool[] = [
       };
     },
   },
-  
-  // ─── 3. Get joke tool: Random jokes! ───
+
+  // ─── 8. Get joke tool: Random jokes! ───
   {
     name: "get_joke",
     description: "Get a random joke. User wants a joke to be told.",
@@ -75,26 +271,24 @@ export const tools: Tool[] = [
         };
       }
     },
-
   },
 
-  // ─── 4. Country info tool: Get information about capital and population ───
+  // ─── 9. Country info tool: Get information about capital and population ───
   {
     name: "get_country_info",
     description: "Get information about a country. User wants to know about the capital and population.",
     parameters: {
       type: "object",
       properties: {
-        country: { 
-          type: "string", 
-          description: "Country name, e.g. India" 
+        country: {
+          type: "string",
+          description: "Country name, e.g. India",
         },
       },
       required: ["country"],
     },
     run: async (args: Record<string, unknown>) => {
       const rawCountry = typeof args.country === "string" ? args.country : String(args.country ?? "");
-      // Curated fast offline database for popular travel destinations and prompt examples
       const KNOWN_COUNTRIES: Record<string, { capital: string; population: string; region: string; cuisine?: string }> = {
         india: { capital: "New Delhi", population: "1,428,000,000", region: "Asia", cuisine: "Biryani, Butter Chicken, Masala Dosa" },
         france: { capital: "Paris", population: "68,000,000", region: "Europe", cuisine: "Croissants, Coq au Vin, Ratatouille" },
@@ -159,5 +353,5 @@ export const tools: Tool[] = [
         return { country: rawCountry, error: message };
       }
     },
-  }
+  },
 ];
