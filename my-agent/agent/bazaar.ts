@@ -208,28 +208,31 @@ export function getPrivateAcceptanceThreshold(item: Item, mood: Mood = stall.moo
  * Enforces the strict floor-hiding requirement so counter prices cannot reveal the threshold.
  */
 export function calculateCounterPrice(item: Item, offer: number, threshold: number): number {
+  // Safe margin above threshold so public counter never reveals or clamps to private threshold
+  const safeMargin = Math.max(2, Math.floor((item.basePrice - threshold) * 0.1));
+  const minPublicCounter = threshold + safeMargin;
+
   // If asking price has already reached the lowest safe level above threshold, it cannot concede further
-  if (item.askingPrice <= threshold + 1) {
-    return Math.min(item.basePrice, threshold + 1);
+  if (item.askingPrice <= minPublicCounter) {
+    return Math.min(item.basePrice, minPublicCounter);
   }
 
-  // Safe buffer above threshold so public counter never clamps to or reveals the floor
-  // Buffer scales with spread between basePrice and threshold, but never forces counter >= askingPrice
-  const maxPossibleBuffer = Math.max(1, Math.floor((item.basePrice - threshold) * 0.15));
-  const maxBufferAllowed = Math.max(1, item.askingPrice - threshold - 1);
-  const buffer = Math.min(maxPossibleBuffer, maxBufferAllowed);
-  const minPublicCounter = threshold + buffer;
+  // Responsive concession:
+  // Gap between current asking price and the safe floor
+  const remainingSpread = item.askingPrice - minPublicCounter;
 
-  // Progressive concession based on the gap between current asking price and the offer
-  const spread = item.askingPrice - Math.max(offer, threshold);
-  const concession = Math.max(1, Math.round(spread * 0.35));
+  // Higher offers (closer to threshold) yield slightly greater merchant concessions
+  const safeOffer = Math.max(0, Math.min(threshold, offer));
+  const offerRatio = threshold > 0 ? safeOffer / threshold : 0.5;
+  const responsivenessFactor = 0.3 + 0.15 * offerRatio; // between 0.30 and 0.45
+
+  const concession = Math.max(1, Math.round(remainingSpread * responsivenessFactor));
   const candidateCounter = item.askingPrice - concession;
 
   // Counter must be:
   // 1. Strictly less than current asking price: <= item.askingPrice - 1
-  // 2. Strictly greater than threshold: >= threshold + 1
-  // 3. No lower than minPublicCounter (where minPublicCounter <= item.askingPrice - 1)
-  // 4. No greater than basePrice
+  // 2. Strictly greater than threshold: >= minPublicCounter (>= threshold + 2)
+  // 3. No greater than basePrice
   let counter = Math.max(minPublicCounter, Math.min(item.askingPrice - 1, candidateCounter));
   if (counter <= threshold) {
     counter = threshold + 1;
@@ -258,7 +261,29 @@ export function listWares(): PublicWare[] {
 }
 
 export function getItem(itemId: string): Item | undefined {
-  return stall.items.get(itemId);
+  if (!itemId || typeof itemId !== "string") return undefined;
+  const clean = itemId.trim().toLowerCase();
+  const direct = stall.items.get(clean);
+  if (direct) return direct;
+
+  const strippedClean = clean.replace(/[^a-z0-9]/g, "");
+  if (!strippedClean) return undefined;
+
+  for (const item of stall.items.values()) {
+    const itemIdStripped = item.id.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const itemNameStripped = item.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (
+      item.id.toLowerCase() === clean ||
+      item.name.toLowerCase() === clean ||
+      itemIdStripped === strippedClean ||
+      itemNameStripped === strippedClean ||
+      itemIdStripped.includes(strippedClean) ||
+      itemNameStripped.includes(strippedClean)
+    ) {
+      return item;
+    }
+  }
+  return undefined;
 }
 
 export function getPublicWare(itemId: string): PublicWare | undefined {
@@ -329,7 +354,7 @@ export function haggle(itemId: string, offer: number): HaggleResult {
     };
   }
 
-  const item = stall.items.get(itemId.trim());
+  const item = getItem(itemId);
   if (!item) {
     return {
       status: "error",
@@ -529,17 +554,10 @@ export function verifyBuyerConfirmation(
     };
   }
 
-  // 5. Price proposals or haggle offers are NOT purchase confirmations
-  if (/\b(offer|counter|how about|give you|take|for)\s+\d+|\d+\s*silver\b/i.test(userText)) {
-    return {
-      authorized: false,
-      reason: "Buyer is proposing a price or haggling rather than confirming checkout.",
-    };
-  }
-
-  // 6. Negative / dissent / hesitation phrases disqualify authorization immediately
+  // 5. Negative / dissent / hesitation phrases disqualify authorization immediately
+  // Note: Allow "no problem", "no worries", "no issue", "no objection" as affirmative phrases
   const dissentRegex =
-    /\b(no|wait|cancel|stop|don't|dont|do not|won't|wont|will not|can't|cant|cannot|nevermind|never mind|decline|reject|abort|too expensive|too much|not yet|hold on|never|refuse|bad deal|terrible deal|awful deal|no deal|wrong item)\b/i;
+    /\b(no(?!\s+(?:problem|worries|issue|objection))|wait|cancel|stop|don't|dont|do not|won't|wont|will not|can't|cant|cannot|nevermind|never mind|decline|reject|abort|too expensive|too much|not yet|hold on|never|refuse|bad deal|terrible deal|awful deal|no deal|wrong item)\b/i;
   if (dissentRegex.test(userText)) {
     return {
       authorized: false,
@@ -547,8 +565,40 @@ export function verifyBuyerConfirmation(
     };
   }
 
+  // 6. Price proposals or haggle offers are NOT purchase confirmations
+  // Reject explicit haggle/counter proposal phrases
+  if (/\b(offer|counter|how about|give you|will you take|can you take|can you do)\s+\d+/i.test(userText)) {
+    return {
+      authorized: false,
+      reason: "Buyer is proposing a price or haggling rather than confirming checkout.",
+    };
+  }
+
+  // If user explicitly mentions a silver amount or price ("for X", "X silver"), verify it matches agreed price
+  const silverMatch = userText.match(/\b(\d+)\s*silver\b/i);
+  if (silverMatch) {
+    const mentionedPrice = parseInt(silverMatch[1], 10);
+    if (mentionedPrice !== deal.agreedPrice) {
+      return {
+        authorized: false,
+        reason: `Buyer is proposing or mentioning a different price (${mentionedPrice} silver vs agreed ${deal.agreedPrice} silver) rather than confirming checkout.`,
+      };
+    }
+  }
+
+  const forPriceMatch = userText.match(/\bfor\s+(\d+)\b/i);
+  if (forPriceMatch) {
+    const mentionedPrice = parseInt(forPriceMatch[1], 10);
+    if (mentionedPrice !== deal.agreedPrice) {
+      return {
+        authorized: false,
+        reason: `Buyer is proposing or mentioning a different price (${mentionedPrice} silver vs agreed ${deal.agreedPrice} silver) rather than confirming checkout.`,
+      };
+    }
+  }
+
   // 7. Check for item mismatch:
-  // If user explicitly mentions an item, it must match this deal's item
+  // A. Check against other stall wares
   const itemKeywords: Record<string, string[]> = {
     "brass-astrolabe": ["astrolabe", "brass"],
     "saffron-tin": ["saffron", "tin"],
@@ -572,11 +622,105 @@ export function verifyBuyerConfirmation(
     }
   }
 
-  // 8. Explicit affirmative confirmation check
+  // B. Check if user explicitly names an uncataloged / non-stall item target
+  // e.g. "for the magic carpet", "checkout the flying carpet", "buy the sword"
+  const targetMatch =
+    userText.match(/\bfor\s+(?:the\s+|a\s+|an\s+)?([a-z\s-]+?)(?:\s+(?:now|please|with|at)|\s*[,.?!]|\s*$)/i) ||
+    userText.match(
+      /\b(?:checkout|buy|purchase|pay for)\s+(?:the\s+|a\s+|an\s+)?([a-z\s-]+?)(?:\s+(?:now|please|with|at)|\s*[,.?!]|\s*$)/i
+    );
+  if (targetMatch) {
+    const rawTarget = targetMatch[1].trim().toLowerCase();
+    const nonItemWords = new Set([
+      "now",
+      "please",
+      "immediately",
+      "today",
+      "asap",
+      "it",
+      "this",
+      "that",
+      "the item",
+      "item",
+      "the ware",
+      "ware",
+      "the deal",
+      "deal",
+      "purchase",
+      "checkout",
+      "payment",
+      "order",
+      "the goods",
+      "goods",
+      "one",
+      "silver",
+    ]);
+    if (
+      !nonItemWords.has(rawTarget) &&
+      !/^\d+$/.test(rawTarget) &&
+      !/^\d+\s*silver$/.test(rawTarget) &&
+      !rawTarget.startsWith("for ")
+    ) {
+      const thisKeywords = itemKeywords[deal.itemId] ?? [];
+      const itemWords = deal.itemName.toLowerCase().split(/\s+/);
+      const allThisWords = new Set([...thisKeywords, ...itemWords]);
+      const targetWords = rawTarget.split(/\s+/).filter((w) => !nonItemWords.has(w));
+      if (targetWords.length > 0) {
+        const matchesThisDeal = targetWords.some((w) => allThisWords.has(w));
+        if (!matchesThisDeal) {
+          return {
+            authorized: false,
+            reason: `Buyer mentioned "${rawTarget}", which does not match the item for this deal (${deal.itemName}).`,
+          };
+        }
+      }
+    }
+  }
+
+  // 8. Multi-deal conversation turn disambiguation:
+  // Tie confirmation to current user action and prevent model-supplied argument bypass
+  const pendingDeals = Array.from(stall.deals.values()).filter((d) => d.status === "pending_payment");
+  if (pendingDeals.length > 1) {
+    // Check if user explicitly named this deal's item in their text
+    const thisKeywords = itemKeywords[deal.itemId] ?? [];
+    const itemWords = deal.itemName.toLowerCase().split(/\s+/);
+    const allThisWords = new Set([...thisKeywords, ...itemWords]);
+    const userMentionsThisItem = Array.from(allThisWords).some((w) => new RegExp(`\\b${w}\\b`, "i").test(userText));
+
+    if (!userMentionsThisItem) {
+      // User did not name the item in this turn; inspect preceding agent turn to see what was asked
+      const lastAgentMsg = ctx?.messages
+        ? [...ctx.messages].reverse().find((m) => m.role === "agent")?.text
+        : undefined;
+
+      if (lastAgentMsg) {
+        // If the preceding agent message was offering / asking about another item,
+        // then the user's generic confirmation belongs to THAT item, NOT this deal!
+        const discussesThisDeal =
+          lastAgentMsg.toLowerCase().includes(deal.itemName.toLowerCase()) ||
+          lastAgentMsg.includes(deal.id) ||
+          thisKeywords.some((kw) => new RegExp(`\\b${kw}\\b`, "i").test(lastAgentMsg));
+
+        if (!discussesThisDeal) {
+          return {
+            authorized: false,
+            reason: `Current conversation turn is discussing another item; confirmation cannot be applied to deal "${dealId}" (${deal.itemName}).`,
+          };
+        }
+      } else {
+        return {
+          authorized: false,
+          reason: "Multiple pending deals exist. Buyer must specify which item they wish to checkout.",
+        };
+      }
+    }
+  }
+
+  // 9. Explicit affirmative confirmation check
   const explicitAffirmativePatterns = [
     /^(?:please\s+)?(yes|yep|yeah|sure|ok|okay|proceed|confirm|checkout|agreed|done deal|let's do it|lets do it|go ahead|deal|i accept|accept|take it|buy it|pay for it|purchase it)\b/i,
     /\b(proceed to checkout|confirm checkout|confirm purchase|confirm payment|proceed with payment|go ahead and checkout|go ahead with (the )?payment|pay for it|buy it now|let's checkout|lets checkout|let's pay|lets pay|checkout now)\b/i,
-    /\b(deal, let's pay|i accept, go ahead with purchase|yes please|yes, proceed)\b/i,
+    /\b(deal, let's pay|i accept, go ahead with purchase|yes please|yes, proceed|no problem, proceed|no problem, let's checkout|no worries, proceed)\b/i,
   ];
 
   const hasAffirmative = explicitAffirmativePatterns.some((pattern) => pattern.test(userText));
