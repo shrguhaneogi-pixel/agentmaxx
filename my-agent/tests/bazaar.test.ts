@@ -401,6 +401,109 @@ describe("Marzban Bazaar Merchant Engine", () => {
       assert.match(auth.reason!, /just agreed in this turn/i);
     });
 
+    it("authorizes payment when user confirms and mentions the exact agreed silver price", () => {
+      const res = haggle("map-scroll", 30);
+      const dealId = res.dealId!;
+
+      const validPricePhrases = [
+        "Yes, 30 silver is a deal, proceed to checkout",
+        "Yes, 30 silver, please checkout",
+        "Deal at 30 silver, let's pay",
+        "Proceed to checkout for 30 silver",
+      ];
+
+      for (const phrase of validPricePhrases) {
+        const auth = verifyBuyerConfirmation(dealId, { lastUserMessage: phrase });
+        assert.equal(auth.authorized, true, `Phrase "${phrase}" should be authorized`);
+      }
+    });
+
+    it("rejects payment when user mentions a mismatched silver price during confirmation", () => {
+      const res = haggle("map-scroll", 30);
+      const dealId = res.dealId!;
+
+      const mismatchedPhrases = [
+        "Yes, 20 silver, proceed to checkout",
+        "Yes, proceed to checkout for 25 silver",
+      ];
+
+      for (const phrase of mismatchedPhrases) {
+        const auth = verifyBuyerConfirmation(dealId, { lastUserMessage: phrase });
+        assert.equal(auth.authorized, false, `Mismatched price "${phrase}" must be rejected`);
+        assert.match(auth.reason!, /different price/i);
+      }
+    });
+
+    it("authorizes payment when user confirms with 'no problem' or 'no worries'", () => {
+      const res = haggle("map-scroll", 30);
+      const dealId = res.dealId!;
+
+      const affirmativePhrases = [
+        "No problem, proceed to checkout",
+        "No worries, go ahead and checkout",
+        "No problem, let's checkout",
+      ];
+
+      for (const phrase of affirmativePhrases) {
+        const auth = verifyBuyerConfirmation(dealId, { lastUserMessage: phrase });
+        assert.equal(auth.authorized, true, `Affirmative "${phrase}" should not be treated as dissent`);
+      }
+    });
+
+    it("rejects payment when user specifies an uncataloged non-stall item", () => {
+      const res = haggle("brass-astrolabe", 75);
+      const dealId = res.dealId!;
+
+      const uncatalogedPhrases = [
+        "Yes, proceed to checkout for the magic carpet",
+        "Yes, buy the enchanted sword",
+        "Please checkout the flying carpet",
+      ];
+
+      for (const phrase of uncatalogedPhrases) {
+        const auth = verifyBuyerConfirmation(dealId, { lastUserMessage: phrase });
+        assert.equal(auth.authorized, false, `Uncataloged item phrase "${phrase}" must be rejected`);
+        assert.match(auth.reason!, /does not match/i);
+      }
+    });
+
+    it("prevents model-supplied dealId bypass in multi-deal conversation context", () => {
+      // Create two deals in stall
+      const lampRes = haggle("haunted-lamp", 50);
+      const lampDealId = lampRes.dealId!;
+
+      const astrolabeRes = haggle("brass-astrolabe", 75);
+      const astrolabeDealId = astrolabeRes.dealId!;
+
+      // Preceding conversation turn discussed and agreed to the Brass Astrolabe
+      const messages: Array<{ role: "user" | "agent"; text: string }> = [
+        { role: "user", text: "I offer 75 silver for the Brass Astrolabe." },
+        {
+          role: "agent",
+          text: `You drive a spirited bargain, traveler! I accept your offer of 75 silver for the Brass Astrolabe. Would you like to proceed to checkout?`,
+        },
+      ];
+
+      // Model attempts to execute payment for the Haunted Lamp instead of the Astrolabe
+      const hijackedAuth = verifyBuyerConfirmation(lampDealId, {
+        messages,
+        lastUserMessage: "Yes, proceed to checkout",
+      });
+      assert.equal(
+        hijackedAuth.authorized,
+        false,
+        "Model-supplied dealId for another item must be rejected when turn discusses Astrolabe"
+      );
+      assert.match(hijackedAuth.reason!, /discussing another item/i);
+
+      // Legitimate confirmation for the Astrolabe in this turn is authorized
+      const legitimateAuth = verifyBuyerConfirmation(astrolabeDealId, {
+        messages,
+        lastUserMessage: "Yes, proceed to checkout",
+      });
+      assert.equal(legitimateAuth.authorized, true, "Confirmation for the discussed deal must be authorized");
+    });
+
     it("rejects non-existent deal IDs", () => {
       const auth = verifyBuyerConfirmation("non-existent-deal-id", {
         lastUserMessage: "Yes, checkout",
@@ -708,6 +811,52 @@ describe("Marzban Bazaar Merchant Engine", () => {
       assert.equal(completedReceipt.dealId, dealId);
       assert.equal(completedReceipt.itemId, "map-scroll");
       assert.equal(completedReceipt.status, "completed");
+    });
+
+    it("supports item lookup by name and normalized strings in haggle", () => {
+      const resName = haggle("Brass Astrolabe", 80);
+      assert.equal(resName.status, "accepted");
+      assert.equal(resName.itemId, "brass-astrolabe");
+
+      const resSpaced = haggle("haunted lamp", 50);
+      assert.equal(resSpaced.status, "accepted");
+      assert.equal(resSpaced.itemId, "haunted-lamp");
+    });
+
+    it("supports snake_case and camelCase aliases across all tools", async () => {
+      const haggleTool = tools.find((t) => t.name === "haggle_offer")!;
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+      const receiptTool = tools.find((t) => t.name === "get_receipt")!;
+
+      // haggle_offer with item_id alias
+      const haggleRes = ((await haggleTool.run(
+        { item_id: "silk-scarf", offer: 40 },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(haggleRes.status, "accepted");
+      const dealId = String(haggleRes.dealId);
+
+      // pay_invoice with deal_id alias
+      const payRes = ((await payTool.run(
+        { deal_id: dealId },
+        {
+          baseUrl: "http://localhost:3000",
+          lastUserMessage: "Yes, checkout",
+        }
+      )) as unknown) as Record<string, unknown>;
+      // Authorization passes with deal_id alias
+      assert.notEqual(payRes.error, "Missing required parameter: dealId");
+
+      // complete payment and test get_receipt with receipt_id alias
+      const completeRes = completePayment(dealId, "0xMockPayer");
+      assert.equal(completeRes.ok, true);
+      const receiptId = completeRes.receipt.id;
+
+      const receiptRes = ((await receiptTool.run(
+        { receipt_id: receiptId },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(receiptRes.receiptId, receiptId);
     });
   });
 });
