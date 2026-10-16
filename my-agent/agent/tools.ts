@@ -62,7 +62,8 @@ export const tools: Tool[] = [
       required: ["itemId", "offer"],
     },
     run: async (args: Record<string, unknown>) => {
-      const itemId = typeof args.itemId === "string" ? args.itemId : String(args.itemId ?? "");
+      const rawItemId = args.itemId ?? args.item_id;
+      const itemId = typeof rawItemId === "string" ? rawItemId : String(rawItemId ?? "");
       const rawOffer = typeof args.offer === "number" ? args.offer : Number(args.offer);
       return haggle(itemId, rawOffer);
     },
@@ -84,7 +85,8 @@ export const tools: Tool[] = [
       required: ["dealId"],
     },
     run: async (args: Record<string, unknown>, ctx: ToolContext) => {
-      const dealId = typeof args.dealId === "string" ? args.dealId : String(args.dealId ?? "");
+      const rawDealId = args.dealId ?? args.deal_id;
+      const dealId = typeof rawDealId === "string" ? rawDealId : String(rawDealId ?? "");
       if (!dealId) {
         return { error: "Missing required parameter: dealId" };
       }
@@ -165,11 +167,17 @@ export const tools: Tool[] = [
       },
     },
     run: async (args: Record<string, unknown>) => {
+      const rawIdentifier =
+        args.receiptId ??
+        args.receipt_id ??
+        args.dealId ??
+        args.deal_id ??
+        args.itemId ??
+        args.item_id;
       const identifier =
-        (typeof args.receiptId === "string" && args.receiptId) ||
-        (typeof args.dealId === "string" && args.dealId) ||
-        (typeof args.itemId === "string" && args.itemId) ||
-        undefined;
+        typeof rawIdentifier === "string" && rawIdentifier.trim()
+          ? rawIdentifier.trim()
+          : undefined;
       const receipt = getReceipt(identifier);
       if (!receipt) {
         return {

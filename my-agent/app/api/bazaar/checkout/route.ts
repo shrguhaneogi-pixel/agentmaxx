@@ -66,32 +66,8 @@ export async function GET(
     );
   }
 
-  // Handle already completed deals idempotently
-  if (deal.status === "completed") {
-    const existingReceipt = getReceipt(dealId);
-    return NextResponse.json({
-      success: true,
-      dealId,
-      itemId: deal.itemId,
-      itemName: deal.itemName,
-      silverPrice: deal.agreedPrice,
-      receiptId: existingReceipt?.id ?? "rcpt-completed",
-      receipt: existingReceipt ?? {
-        id: "rcpt-completed",
-        dealId,
-        itemId: deal.itemId,
-        itemName: deal.itemName,
-        silverPrice: deal.agreedPrice,
-        payer: payment.from,
-        timestamp: new Date().toISOString(),
-      },
-      paidBy: payment.from,
-      network: "Base Sepolia (testnet)",
-      message: `Deal "${dealId}" was previously completed.`,
-    });
-  }
-
   const txHash = `0x${crypto.createHash("sha256").update(payment.nonce || `${dealId}-${payment.from}`).digest("hex")}`;
+  const isAlreadyCompleted = deal.status === "completed";
   const result = completePayment(dealId, payment.from, txHash);
   if (!result.ok) {
     return NextResponse.json(
@@ -110,6 +86,8 @@ export async function GET(
     receipt: result.receipt,
     paidBy: payment.from,
     network: "Base Sepolia (testnet)",
-    message: `Checkout successful! Purchased ${deal.itemName} for ${deal.agreedPrice} in-game silver.`,
+    message: isAlreadyCompleted
+      ? `Deal "${dealId}" was previously completed.`
+      : `Checkout successful! Purchased ${deal.itemName} for ${deal.agreedPrice} in-game silver.`,
   });
 }
