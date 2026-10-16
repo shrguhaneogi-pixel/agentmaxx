@@ -518,8 +518,11 @@ export function verifyBuyerConfirmation(
     };
   }
 
-  // 4. Questions are NOT purchase confirmations
-  if (userText.endsWith("?") || /^(can|could|would|will|how|what|why|where|who|is|are)\b/i.test(userText)) {
+  // 4. Questions are NOT purchase confirmations (unless starting with 'how about <price>' offer)
+  if (
+    !/^\s*how about\s+\d+/i.test(userText) &&
+    (userText.endsWith("?") || /^(can|could|would|will|how|what|why|where|who|is|are)\b/i.test(userText))
+  ) {
     return {
       authorized: false,
       reason: "Buyer asked a question rather than providing explicit purchase confirmation.",
@@ -571,8 +574,8 @@ export function verifyBuyerConfirmation(
 
   // 8. Explicit affirmative confirmation check
   const explicitAffirmativePatterns = [
-    /^(yes|yep|yeah|sure|ok|okay|proceed|confirm|checkout|agreed|done deal|let's do it|lets do it|go ahead|deal|i accept|accept|take it|buy it|pay for it|purchase it)\b/i,
-    /\b(proceed to checkout|confirm checkout|confirm purchase|confirm payment|proceed with payment|go ahead and checkout|go ahead with (the )?payment|pay for it|buy it now|let's checkout|lets checkout|let's pay|lets pay)\b/i,
+    /^(?:please\s+)?(yes|yep|yeah|sure|ok|okay|proceed|confirm|checkout|agreed|done deal|let's do it|lets do it|go ahead|deal|i accept|accept|take it|buy it|pay for it|purchase it)\b/i,
+    /\b(proceed to checkout|confirm checkout|confirm purchase|confirm payment|proceed with payment|go ahead and checkout|go ahead with (the )?payment|pay for it|buy it now|let's checkout|lets checkout|let's pay|lets pay|checkout now)\b/i,
     /\b(deal, let's pay|i accept, go ahead with purchase|yes please|yes, proceed)\b/i,
   ];
 

@@ -175,8 +175,8 @@ describe("Marzban Bazaar Merchant Engine", () => {
 
       const threshold = getPrivateAcceptanceThreshold(getItem("brass-astrolabe")!, "neutral");
       assert.ok(res.counterPrice > threshold, "Counter price must be strictly above threshold");
-      assert.equal((res as Record<string, unknown>).privateCost, undefined);
-      assert.equal((res as Record<string, unknown>).threshold, undefined);
+      assert.equal(((res as unknown) as Record<string, unknown>).privateCost, undefined);
+      assert.equal(((res as unknown) as Record<string, unknown>).threshold, undefined);
     });
   });
 
