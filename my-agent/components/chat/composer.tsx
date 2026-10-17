@@ -9,6 +9,7 @@ interface ComposerProps {
   input: string;
   ready: boolean;
   thinking: boolean;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
   onChange: (value: string) => void;
   onSubmit: (text: string) => void;
 }
@@ -23,16 +24,18 @@ export function Composer({
   input,
   ready,
   thinking,
+  inputRef: externalInputRef,
   onChange,
   onSubmit,
 }: ComposerProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = externalInputRef || internalInputRef;
 
   useEffect(() => {
     if (ready && !thinking) {
       inputRef.current?.focus();
     }
-  }, [ready, thinking]);
+  }, [ready, thinking, inputRef]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +83,11 @@ export function Composer({
             type="text"
             value={input}
             onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                onChange("");
+              }
+            }}
             placeholder={
               ready
                 ? "Enter command, haggle offer, or directive..."

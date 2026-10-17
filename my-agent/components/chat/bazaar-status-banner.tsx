@@ -22,21 +22,21 @@ export function BazaarStatusBanner({
       icon: <Smile className="size-3.5 text-emerald-400" />,
       textClass: "text-emerald-400",
       borderClass: "border-emerald-500/30 bg-emerald-500/10",
-      description: "Merchant is in good spirits; negotiation thresholds are favorable (0.95x).",
+      description: "Merchant is in high spirits and receptive to favorable counter-offers.",
     },
     neutral: {
       label: "NEUTRAL",
       icon: <Meh className="size-3.5 text-amber-400" />,
       textClass: "text-amber-400",
       borderClass: "border-amber-500/30 bg-amber-500/10",
-      description: "Merchant is calm and evaluating offers according to standard pricing (1.0x).",
+      description: "Merchant is evaluating incoming offers with standard bazaar decorum.",
     },
     grumpy: {
       label: "GRUMPY",
       icon: <Frown className="size-3.5 text-rose-400" />,
       textClass: "text-rose-400",
       borderClass: "border-rose-500/30 bg-rose-500/10",
-      description: "Merchant has been insulted by lowball offers; counter prices are steep (1.15x).",
+      description: "Merchant is irritated by low offers and holding firm on counter-prices.",
     },
   }[mood];
 

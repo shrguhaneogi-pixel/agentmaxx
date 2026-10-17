@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, Code, ExternalLink, Play, Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ChevronDown, Code, Play, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -17,65 +16,89 @@ interface ToolsPanelProps {
   onSelectPrompt: (prompt: string) => void;
 }
 
-// Map known tools to categories, action types, and example usage
+interface ToolParam {
+  name: string;
+  type: string;
+  required: boolean;
+  desc?: string;
+}
+
+// Verified tool metadata reflecting actual schemas in agent/tools.ts
 const TOOL_META: Record<
   string,
   {
     category: "COMMERCE" | "WALLET" | "UTILITY";
     actionType: "STATE-CHANGING" | "READ-ONLY";
     samplePrompt: string;
-    params?: string[];
+    params: ToolParam[];
   }
 > = {
   list_wares: {
     category: "COMMERCE",
     actionType: "READ-ONLY",
     samplePrompt: "Show me what wares you have for sale in the bazaar.",
+    params: [],
   },
   haggle_offer: {
     category: "COMMERCE",
     actionType: "STATE-CHANGING",
     samplePrompt: "I offer 75 silver for the Brass Astrolabe.",
-    params: ["itemId", "offerPrice"],
+    params: [
+      { name: "itemId", type: "string", required: true, desc: "Item unique ID (e.g. brass-astrolabe)" },
+      { name: "offer", type: "integer", required: true, desc: "Silver offered (positive integer)" },
+    ],
   },
   pay_invoice: {
     category: "COMMERCE",
     actionType: "STATE-CHANGING",
     samplePrompt: "Yes, I confirm purchase of the deal.",
-    params: ["dealId", "amount"],
+    params: [
+      { name: "dealId", type: "string", required: true, desc: "Agreed deal ID (e.g. deal-xxxxxxxx)" },
+    ],
   },
   get_receipt: {
     category: "COMMERCE",
     actionType: "READ-ONLY",
     samplePrompt: "Show me the receipt for my last bazaar purchase.",
-    params: ["receiptId"],
+    params: [
+      { name: "receiptId", type: "string", required: false, desc: "Optional receipt identifier" },
+      { name: "dealId", type: "string", required: false, desc: "Optional deal identifier" },
+      { name: "itemId", type: "string", required: false, desc: "Optional item identifier" },
+    ],
   },
   get_stall_status: {
     category: "COMMERCE",
     actionType: "READ-ONLY",
     samplePrompt: "What is the current mood and status of Marzban's bazaar stall?",
+    params: [],
   },
   get_my_wallet: {
     category: "WALLET",
     actionType: "READ-ONLY",
     samplePrompt: "What is your wallet address and balance?",
+    params: [],
   },
   get_weather: {
     category: "UTILITY",
     actionType: "STATE-CHANGING",
     samplePrompt: "What's the weather in Mumbai?",
-    params: ["city"],
+    params: [
+      { name: "city", type: "string", required: true, desc: "City name for micropayment weather query" },
+    ],
   },
   get_joke: {
     category: "UTILITY",
     actionType: "READ-ONLY",
     samplePrompt: "Tell me a programming joke.",
+    params: [],
   },
   get_country_info: {
     category: "UTILITY",
     actionType: "READ-ONLY",
     samplePrompt: "Tell me about Japan.",
-    params: ["country"],
+    params: [
+      { name: "country", type: "string", required: true, desc: "Target country name" },
+    ],
   },
 };
 
@@ -129,6 +152,7 @@ export function ToolsPanel({ tools, onSelectPrompt }: ToolsPanelProps) {
             category: "UTILITY" as const,
             actionType: "READ-ONLY" as const,
             samplePrompt: `Execute tool ${t.name}`,
+            params: [],
           };
           const isExpanded = expandedTool === t.name;
 
@@ -142,8 +166,8 @@ export function ToolsPanel({ tools, onSelectPrompt }: ToolsPanelProps) {
             >
               {/* Tool Header */}
               <div className="flex items-start justify-between gap-2">
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2">
+                <div className="flex flex-col min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-xs font-bold text-primary">&gt; {t.name}</span>
                     <span
                       className={cn(
@@ -161,31 +185,91 @@ export function ToolsPanel({ tools, onSelectPrompt }: ToolsPanelProps) {
                   </p>
                 </div>
 
-                {/* Quick Try Prompt Action */}
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  onClick={() => onSelectPrompt(meta.samplePrompt)}
-                  className="size-6 shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
-                  title="Run sample prompt"
-                  aria-label={`Try tool ${t.name}`}
-                >
-                  <Play className="size-3" />
-                </Button>
+                {/* Header Actions */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => setExpandedTool(isExpanded ? null : t.name)}
+                    className="size-6 text-muted-foreground hover:text-foreground"
+                    title={isExpanded ? "Collapse tool details" : "Expand tool details"}
+                    aria-label={`Toggle details for ${t.name}`}
+                  >
+                    <ChevronDown
+                      className={cn(
+                        "size-3.5 transition-transform duration-200",
+                        isExpanded && "rotate-180 text-primary"
+                      )}
+                    />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={() => onSelectPrompt(meta.samplePrompt)}
+                    className="size-6 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                    title="Populate and focus sample directive"
+                    aria-label={`Try tool ${t.name}`}
+                  >
+                    <Play className="size-3" />
+                  </Button>
+                </div>
               </div>
 
-              {/* Expandable Parameters / Details */}
-              {meta.params && meta.params.length > 0 && (
+              {/* Collapsed Compact Params View */}
+              {!isExpanded && meta.params.length > 0 && (
                 <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-2 border-t border-border/30 text-[10px] font-mono text-muted-foreground">
                   <span className="text-muted-foreground/80">PARAMS:</span>
                   {meta.params.map((p) => (
                     <code
-                      key={p}
+                      key={p.name}
                       className="border border-border/40 bg-muted/60 px-1 py-0.2 text-foreground"
                     >
-                      {p}
+                      {p.name}{p.required ? "*" : ""}
                     </code>
                   ))}
+                </div>
+              )}
+
+              {/* Expanded Detailed Schema View */}
+              {isExpanded && (
+                <div className="mt-3 flex flex-col gap-2.5 pt-2.5 border-t border-border/40 font-mono text-xs">
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                      <Code className="size-3 text-primary" /> Schema Parameters:
+                    </span>
+                    {meta.params.length === 0 ? (
+                      <span className="text-[11px] text-muted-foreground italic">No input parameters required.</span>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        {meta.params.map((p) => (
+                          <div key={p.name} className="flex flex-col text-[11px] bg-muted/30 p-1.5 border border-border/30">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-foreground">{p.name}</span>
+                              <span className="text-[9px] text-muted-foreground">
+                                {p.type} {p.required ? "(required)" : "(optional)"}
+                              </span>
+                            </div>
+                            {p.desc && <span className="text-[10px] text-muted-foreground mt-0.5">{p.desc}</span>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-1 pt-1">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                      <Terminal className="size-3 text-primary" /> Sample Directive:
+                    </span>
+                    <div className="flex items-center justify-between gap-2 bg-background p-2 border border-border/50 text-[11px] text-foreground">
+                      <span className="truncate">{meta.samplePrompt}</span>
+                      <button
+                        onClick={() => onSelectPrompt(meta.samplePrompt)}
+                        className="text-[10px] text-primary hover:underline uppercase shrink-0 font-bold cursor-pointer"
+                      >
+                        Try Directive ↵
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

@@ -31,6 +31,7 @@ interface CommandPaletteProps {
   onSendPrompt: (prompt: string) => void;
   onClearMessages: () => void;
   onFocusInput: () => void;
+  onCreateWallet?: () => void;
 }
 
 export function CommandPalette({
@@ -40,6 +41,7 @@ export function CommandPalette({
   onSendPrompt,
   onClearMessages,
   onFocusInput,
+  onCreateWallet,
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -53,8 +55,8 @@ export function CommandPalette({
       category: "SYSTEM",
       icon: <MessageSquare className="size-4 text-primary" />,
       action: () => {
-        onFocusInput();
         onClose();
+        onFocusInput();
       },
     },
     {
@@ -126,6 +128,17 @@ export function CommandPalette({
     ...(walletAddress
       ? [
           {
+            id: "copy-address",
+            title: "Copy Agent Wallet Address",
+            subtitle: `Copy ${walletAddress.slice(0, 10)}... to clipboard`,
+            category: "WALLET" as const,
+            icon: <Wallet className="size-4 text-primary" />,
+            action: () => {
+              navigator.clipboard.writeText(walletAddress);
+              onClose();
+            },
+          },
+          {
             id: "view-basescan",
             title: "Open BaseScan Explorer",
             subtitle: `View address ${walletAddress.slice(0, 8)}... on Base Sepolia`,
@@ -133,6 +146,20 @@ export function CommandPalette({
             icon: <ExternalLink className="size-4 text-cyan" />,
             action: () => {
               window.open(`https://sepolia.basescan.org/address/${walletAddress}`, "_blank");
+              onClose();
+            },
+          },
+        ]
+      : onCreateWallet
+      ? [
+          {
+            id: "create-wallet",
+            title: "Generate Agent Crypto Wallet",
+            subtitle: "Initialize new Viem keypair on Base Sepolia",
+            category: "WALLET" as const,
+            icon: <Wallet className="size-4 text-primary" />,
+            action: () => {
+              onCreateWallet();
               onClose();
             },
           },

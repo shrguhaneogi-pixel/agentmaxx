@@ -198,6 +198,7 @@ function WalletTerminalCard({
   onRefresh: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const address = wallet.address ?? "";
 
   function copyAddress() {
@@ -205,6 +206,12 @@ function WalletTerminalCard({
     navigator.clipboard.writeText(address);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  function handleRefresh() {
+    setRefreshing(true);
+    onRefresh();
+    setTimeout(() => setRefreshing(false), 1200);
   }
 
   return (
@@ -239,17 +246,26 @@ function WalletTerminalCard({
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-muted-foreground uppercase tracking-wider">BALANCE:</span>
           <span className="text-sm font-bold text-foreground">
-            {wallet.balance !== undefined ? wallet.balance : "0.00 ETH"}
+            {wallet.balance !== undefined ? (
+              wallet.balance === "unavailable" ? (
+                <span className="text-muted-foreground font-normal text-xs uppercase">UNAVAILABLE</span>
+              ) : (
+                wallet.balance
+              )
+            ) : (
+              <span className="text-muted-foreground font-normal text-xs animate-pulse">CHECKING...</span>
+            )}
           </span>
         </div>
         <Button
           variant="ghost"
           size="icon-xs"
-          onClick={onRefresh}
+          onClick={handleRefresh}
           className="size-6 text-muted-foreground hover:text-primary"
           aria-label="Refresh wallet balance"
+          disabled={refreshing}
         >
-          <RefreshCw className="size-3" />
+          <RefreshCw className={cn("size-3", refreshing && "animate-spin text-primary")} />
         </Button>
       </div>
 

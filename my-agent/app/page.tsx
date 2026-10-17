@@ -49,6 +49,7 @@ export default function Home() {
   const [bazaarMood, setBazaarMood] = useState<Mood>("neutral");
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const composerInputRef = useRef<HTMLInputElement>(null);
 
   const loadWallet = useCallback(() => {
     fetch("/api/wallet")
@@ -225,12 +226,13 @@ export default function Home() {
             tools={status?.tools || []}
             onSelectPrompt={(p) => {
               setInput(p);
+              setTimeout(() => composerInputRef.current?.focus(), 50);
             }}
           />
         </aside>
 
         {/* Right Column: Autonomous Agent Command Workspace */}
-        <Card className="flex h-[calc(100vh-5rem)] min-h-[620px] flex-col border border-border/80 bg-card/90 shadow-2xl lg:sticky lg:top-6 overflow-hidden">
+        <Card className="flex h-[600px] lg:h-[calc(100vh-5rem)] min-h-[500px] flex-col border border-border/80 bg-card/90 shadow-2xl lg:sticky lg:top-6 overflow-hidden">
           {/* Workspace Header with Telemetry & Actions */}
           <CardHeader className="border-b border-border/50 py-3.5 px-4 bg-background/60">
             <div className="flex items-center justify-between w-full">
@@ -366,6 +368,7 @@ export default function Home() {
             <div className="w-full">
               <Composer
                 input={input}
+                inputRef={composerInputRef}
                 ready={ready}
                 thinking={thinking}
                 onChange={setInput}
@@ -384,8 +387,9 @@ export default function Home() {
         onSendPrompt={(p) => send(p)}
         onClearMessages={() => setMessages([])}
         onFocusInput={() => {
-          // Handled via focus in composer
+          setTimeout(() => composerInputRef.current?.focus(), 50);
         }}
+        onCreateWallet={createWallet}
       />
     </main>
   );
