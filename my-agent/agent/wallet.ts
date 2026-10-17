@@ -89,23 +89,23 @@ function loadAccount() {
     }
   }
 
-  // 1. Check ephemeral serverless storage in os.tmpdir()
-  const tmpKey = readKeyFromFile(WALLET_TMP_PATH);
-  if (tmpKey) {
-    try {
-      return privateKeyToAccount(tmpKey);
-    } catch {
-      // Ignore and fallback
-    }
-  }
-
-  // 2. Local development file fallback (scoped statically)
+  // 1. Local development file fallback (scoped statically)
   const localKey =
     readKeyFromFile(path.join(process.cwd(), ".agent-wallet.json")) ??
     readKeyFromFile(path.join(process.cwd(), "my-agent", ".agent-wallet.json"));
   if (localKey) {
     try {
       return privateKeyToAccount(localKey);
+    } catch {
+      // Ignore and fallback
+    }
+  }
+
+  // 2. Check ephemeral serverless storage in os.tmpdir()
+  const tmpKey = readKeyFromFile(WALLET_TMP_PATH);
+  if (tmpKey) {
+    try {
+      return privateKeyToAccount(tmpKey);
     } catch {
       // Ignore and fallback
     }
@@ -120,7 +120,7 @@ function requireAccount() {
   return account;
 }
 
-/** Make a brand new wallet and persist it in-memory and ephemerally in os.tmpdir(). */
+/** Make a brand new wallet and persist it in-memory, ephemerally in os.tmpdir(), and locally if writable. */
 export function createWallet(): Address {
   const existing = loadAccount();
   if (existing) return existing.address;
@@ -133,6 +133,18 @@ export function createWallet(): Address {
     fs.writeFileSync(/*turbopackIgnore: true*/ WALLET_TMP_PATH, JSON.stringify({ privateKey }, null, 2));
   } catch {
     // Ephemeral in-memory fallback already holds the private key
+  }
+
+  // Also attempt to persist locally if filesystem is writable (e.g. local dev)
+  try {
+    const cwd = process.cwd();
+    const localDir = fs.existsSync(path.join(cwd, "my-agent")) ? path.join(cwd, "my-agent") : cwd;
+    const localWalletPath = path.join(localDir, ".agent-wallet.json");
+    if (!fs.existsSync(localWalletPath)) {
+      fs.writeFileSync(/*turbopackIgnore: true*/ localWalletPath, JSON.stringify({ privateKey }, null, 2));
+    }
+  } catch {
+    // Read-only filesystem in serverless environments (e.g. EROFS) handled gracefully
   }
 
   return privateKeyToAccount(privateKey).address;
@@ -172,12 +184,19 @@ export async function payAndFetch(url: string): Promise<PaymentExecutionResult> 
   const asset = typeof paymentOffer.asset === "string" ? paymentOffer.asset : "USDC";
   const payTo = (typeof paymentOffer.payTo === "string" ? paymentOffer.payTo : "0x000000000000000000000000000000000000dEaD") as Address;
 
+  let resource = url;
+  try {
+    resource = new URL(url, "http://localhost:3000").pathname;
+  } catch {
+    // Keep raw url
+  }
+
   const payment: Payment = {
     from: account.address,
     to: payTo,
     amount: price,
     asset,
-    resource: new URL(url).pathname,
+    resource,
     nonce: crypto.randomUUID(),
   };
   const signature = await account.signMessage({ message: JSON.stringify(payment) });

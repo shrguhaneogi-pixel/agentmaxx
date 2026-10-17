@@ -23,7 +23,7 @@ export type Tool = {
   /** JSON Schema describing the inputs. */
   parameters: Record<string, unknown>;
   /** The code that runs when the agent calls this tool. */
-  run: (args: Record<string, unknown>, ctx: ToolContext) => Promise<unknown>;
+  run: (args: Record<string, unknown>, ctx?: ToolContext) => Promise<unknown>;
 };
 
 export const tools: Tool[] = [
@@ -84,15 +84,17 @@ export const tools: Tool[] = [
       },
       required: ["dealId"],
     },
-    run: async (args: Record<string, unknown>, ctx: ToolContext) => {
+    run: async (args: Record<string, unknown>, ctx?: ToolContext) => {
       const rawDealId = args.dealId ?? args.deal_id;
       const dealId = typeof rawDealId === "string" ? rawDealId : String(rawDealId ?? "");
       if (!dealId) {
         return { error: "Missing required parameter: dealId" };
       }
 
+      const safeCtx: ToolContext = ctx ?? { baseUrl: "http://localhost:3000" };
+
       // Enforce the conservative authorization gate
-      const auth = verifyBuyerConfirmation(dealId, ctx);
+      const auth = verifyBuyerConfirmation(dealId, safeCtx);
       if (!auth.authorized) {
         return {
           error: `Payment authorization denied: ${auth.reason}`,
@@ -109,7 +111,7 @@ export const tools: Tool[] = [
       }
 
       try {
-        const checkoutUrl = `${ctx.baseUrl}/api/bazaar/checkout?dealId=${encodeURIComponent(dealId)}`;
+        const checkoutUrl = `${safeCtx.baseUrl || "http://localhost:3000"}/api/bazaar/checkout?dealId=${encodeURIComponent(dealId)}`;
         const result: PaymentExecutionResult = await payAndFetch(checkoutUrl);
         const data = (result.data && typeof result.data === "object" ? result.data : {}) as Record<
           string,
@@ -226,8 +228,10 @@ export const tools: Tool[] = [
       },
       required: ["city"],
     },
-    run: async (args: Record<string, unknown>, { baseUrl }: ToolContext): Promise<PaymentExecutionResult> => {
-      const city = typeof args.city === "string" ? args.city : String(args.city ?? "Unknown");
+    run: async (args: Record<string, unknown>, ctx?: ToolContext): Promise<PaymentExecutionResult> => {
+      const baseUrl = ctx?.baseUrl || "http://localhost:3000";
+      const rawCity = args.city ?? args.location;
+      const city = typeof rawCity === "string" && rawCity.trim() ? rawCity.trim() : "Mumbai";
       return payAndFetch(`${baseUrl}/api/weather?city=${encodeURIComponent(city)}`);
     },
   },
@@ -297,6 +301,13 @@ export const tools: Tool[] = [
     },
     run: async (args: Record<string, unknown>) => {
       const rawCountry = typeof args.country === "string" ? args.country : String(args.country ?? "");
+      const normalized = rawCountry.trim().toLowerCase();
+      if (!normalized) {
+        return {
+          error: "Missing required parameter: country",
+          suggestion: "Please provide a valid country name, e.g. 'India', 'Japan', or 'France'.",
+        };
+      }
       const KNOWN_COUNTRIES: Record<string, { capital: string; population: string; region: string; cuisine?: string }> = {
         india: { capital: "New Delhi", population: "1,428,000,000", region: "Asia", cuisine: "Biryani, Butter Chicken, Masala Dosa" },
         france: { capital: "Paris", population: "68,000,000", region: "Europe", cuisine: "Croissants, Coq au Vin, Ratatouille" },
@@ -324,7 +335,6 @@ export const tools: Tool[] = [
         uae: { capital: "Abu Dhabi", population: "9,900,000", region: "Asia", cuisine: "Shawarma, Al Harees, Machboos" },
       };
 
-      const normalized = rawCountry.trim().toLowerCase();
       if (KNOWN_COUNTRIES[normalized]) {
         return {
           country: rawCountry,
