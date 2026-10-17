@@ -859,4 +859,125 @@ describe("Marzban Bazaar Merchant Engine", () => {
       assert.equal(receiptRes.receiptId, receiptId);
     });
   });
+
+  describe("Full Suite Tool Verification & Error Resilience", () => {
+    it("verifies parameter schemas and definitions for every registered tool", () => {
+      assert.equal(tools.length, 9, "Expected exactly 9 registered agent tools");
+      const expectedTools = [
+        "list_wares",
+        "haggle_offer",
+        "pay_invoice",
+        "get_receipt",
+        "get_stall_status",
+        "get_weather",
+        "get_my_wallet",
+        "get_joke",
+        "get_country_info",
+      ];
+      for (const expectedName of expectedTools) {
+        const tool = tools.find((t) => t.name === expectedName);
+        assert.ok(tool, `Tool "${expectedName}" must be registered in tools registry`);
+        assert.ok(tool.description.length > 10, `Tool "${expectedName}" must have descriptive explanation`);
+        assert.equal(tool.parameters.type, "object", `Tool "${expectedName}" parameters must be object schema`);
+        assert.ok(typeof tool.run === "function", `Tool "${expectedName}" run handler must be a function`);
+      }
+    });
+
+    it("executes get_my_wallet tool and returns address and testnet balance", async () => {
+      const walletTool = tools.find((t) => t.name === "get_my_wallet")!;
+      const result = ((await walletTool.run({}, { baseUrl: "http://localhost:3000" })) as unknown) as Record<
+        string,
+        unknown
+      >;
+      if (result.status === "no_wallet") {
+        assert.match(String(result.message), /Create wallet/i);
+      } else {
+        assert.match(String(result.address), /^0x[0-9a-fA-F]{40}$/);
+        assert.equal(result.network, "Base Sepolia (testnet)");
+        assert.ok(typeof result.balance === "string");
+      }
+    });
+
+    it("executes get_joke tool reliably with fallback protection", async () => {
+      const jokeTool = tools.find((t) => t.name === "get_joke")!;
+      const result = ((await jokeTool.run({}, { baseUrl: "http://localhost:3000" })) as unknown) as Record<
+        string,
+        unknown
+      >;
+      assert.ok(typeof result.setup === "string" && result.setup.length > 0, "Joke setup must be a non-empty string");
+      assert.ok(
+        typeof result.punchline === "string" && result.punchline.length > 0,
+        "Joke punchline must be a non-empty string"
+      );
+    });
+
+    it("executes get_country_info tool for known countries and handles missing/invalid parameters", async () => {
+      const countryTool = tools.find((t) => t.name === "get_country_info")!;
+
+      // 1. Known country: India
+      const indiaRes = ((await countryTool.run(
+        { country: "India" },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(indiaRes.capital, "New Delhi");
+      assert.equal(indiaRes.region, "Asia");
+      assert.ok(String(indiaRes.cuisine).includes("Biryani"));
+
+      // 2. Case-insensitive lookup: Japan
+      const japanRes = ((await countryTool.run(
+        { country: "jApAn" },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.equal(japanRes.capital, "Tokyo");
+      assert.equal(japanRes.region, "Asia");
+
+      // 3. Missing parameter validation
+      const missingRes = ((await countryTool.run({}, { baseUrl: "http://localhost:3000" })) as unknown) as Record<
+        string,
+        unknown
+      >;
+      assert.match(String(missingRes.error), /Missing required parameter: country/i);
+      assert.ok(typeof missingRes.suggestion === "string");
+
+      // 4. Empty string parameter validation
+      const emptyRes = ((await countryTool.run(
+        { country: "   " },
+        { baseUrl: "http://localhost:3000" }
+      )) as unknown) as Record<string, unknown>;
+      assert.match(String(emptyRes.error), /Missing required parameter: country/i);
+    });
+
+    it("verifies x402 payment cryptographic signatures via EIP-191 verification", async () => {
+      const { createWallet, verifyPayment } = await import("../agent/wallet");
+      const address = createWallet();
+      assert.ok(address, "Wallet address must exist");
+
+      // Test verifyPayment with null / invalid header
+      const nullVerify = await verifyPayment(null);
+      assert.equal(nullVerify, null);
+
+      const invalidVerify = await verifyPayment("invalid-base64-string");
+      assert.equal(invalidVerify, null);
+
+      const tamperedPayload = Buffer.from(
+        JSON.stringify({
+          payment: { from: address, to: address, amount: "1.0", asset: "USDC" },
+          signature: "0x1234",
+        })
+      ).toString("base64");
+      const tamperedVerify = await verifyPayment(tamperedPayload);
+      assert.equal(tamperedVerify, null);
+    });
+
+    it("handles pay_invoice when called without optional context", async () => {
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+      // Calling with dealId but no context
+      const result = ((await payTool.run({ dealId: "non-existent-deal" })) as unknown) as Record<
+        string,
+        unknown
+      >;
+      assert.ok(result.error);
+      assert.match(String(result.error), /Payment authorization denied/i);
+    });
+  });
 });
