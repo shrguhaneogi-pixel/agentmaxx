@@ -62,9 +62,10 @@ export const tools: Tool[] = [
       required: ["itemId", "offer"],
     },
     run: async (args: Record<string, unknown>) => {
-      const rawItemId = args.itemId ?? args.item_id;
+      const safeArgs = args && typeof args === "object" ? args : {};
+      const rawItemId = safeArgs.itemId ?? safeArgs.item_id;
       const itemId = typeof rawItemId === "string" ? rawItemId : String(rawItemId ?? "");
-      const rawOffer = typeof args.offer === "number" ? args.offer : Number(args.offer);
+      const rawOffer = typeof safeArgs.offer === "number" ? safeArgs.offer : Number(safeArgs.offer);
       return haggle(itemId, rawOffer);
     },
   },
@@ -85,13 +86,16 @@ export const tools: Tool[] = [
       required: ["dealId"],
     },
     run: async (args: Record<string, unknown>, ctx?: ToolContext) => {
-      const rawDealId = args.dealId ?? args.deal_id;
+      const safeArgs = args && typeof args === "object" ? args : {};
+      const rawDealId = safeArgs.dealId ?? safeArgs.deal_id;
       const dealId = typeof rawDealId === "string" ? rawDealId : String(rawDealId ?? "");
       if (!dealId) {
         return { error: "Missing required parameter: dealId" };
       }
 
-      const safeCtx: ToolContext = ctx ?? { baseUrl: "http://localhost:3000" };
+      const rawBase = ctx?.baseUrl || "http://localhost:3000";
+      const cleanBase = rawBase.replace(/\/+$/, "");
+      const safeCtx: ToolContext = ctx ? { ...ctx, baseUrl: cleanBase } : { baseUrl: cleanBase };
 
       // Enforce the conservative authorization gate
       const auth = verifyBuyerConfirmation(dealId, safeCtx);
@@ -111,7 +115,7 @@ export const tools: Tool[] = [
       }
 
       try {
-        const checkoutUrl = `${safeCtx.baseUrl || "http://localhost:3000"}/api/bazaar/checkout?dealId=${encodeURIComponent(dealId)}`;
+        const checkoutUrl = `${cleanBase}/api/bazaar/checkout?dealId=${encodeURIComponent(dealId)}`;
         const result: PaymentExecutionResult = await payAndFetch(checkoutUrl);
         const data = (result.data && typeof result.data === "object" ? result.data : {}) as Record<
           string,
@@ -169,13 +173,14 @@ export const tools: Tool[] = [
       },
     },
     run: async (args: Record<string, unknown>) => {
+      const safeArgs = args && typeof args === "object" ? args : {};
       const rawIdentifier =
-        args.receiptId ??
-        args.receipt_id ??
-        args.dealId ??
-        args.deal_id ??
-        args.itemId ??
-        args.item_id;
+        safeArgs.receiptId ??
+        safeArgs.receipt_id ??
+        safeArgs.dealId ??
+        safeArgs.deal_id ??
+        safeArgs.itemId ??
+        safeArgs.item_id;
       const identifier =
         typeof rawIdentifier === "string" && rawIdentifier.trim()
           ? rawIdentifier.trim()
@@ -228,11 +233,18 @@ export const tools: Tool[] = [
       },
       required: ["city"],
     },
-    run: async (args: Record<string, unknown>, ctx?: ToolContext): Promise<PaymentExecutionResult> => {
-      const baseUrl = ctx?.baseUrl || "http://localhost:3000";
-      const rawCity = args.city ?? args.location;
+    run: async (args: Record<string, unknown>, ctx?: ToolContext): Promise<PaymentExecutionResult | { error: string }> => {
+      const rawBase = ctx?.baseUrl || "http://localhost:3000";
+      const baseUrl = rawBase.replace(/\/+$/, "");
+      const safeArgs = args && typeof args === "object" ? args : {};
+      const rawCity = safeArgs.city ?? safeArgs.location;
       const city = typeof rawCity === "string" && rawCity.trim() ? rawCity.trim() : "Mumbai";
-      return payAndFetch(`${baseUrl}/api/weather?city=${encodeURIComponent(city)}`);
+      try {
+        return await payAndFetch(`${baseUrl}/api/weather?city=${encodeURIComponent(city)}`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        return { error: `Weather service unavailable: ${msg}` };
+      }
     },
   },
 
@@ -300,7 +312,8 @@ export const tools: Tool[] = [
       required: ["country"],
     },
     run: async (args: Record<string, unknown>) => {
-      const rawCountry = typeof args.country === "string" ? args.country : String(args.country ?? "");
+      const safeArgs = args && typeof args === "object" ? args : {};
+      const rawCountry = typeof safeArgs.country === "string" ? safeArgs.country : String(safeArgs.country ?? "");
       const normalized = rawCountry.trim().toLowerCase();
       if (!normalized) {
         return {

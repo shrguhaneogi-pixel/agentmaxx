@@ -171,11 +171,26 @@ export interface PaymentExecutionResult {
 }
 
 /** Fetch a URL. If it asks for payment (402), sign one with the wallet and try again. */
-export async function payAndFetch(url: string): Promise<PaymentExecutionResult> {
-  const first = await fetch(url);
+export async function payAndFetch(url: string, defaultBase = "http://localhost:3000"): Promise<PaymentExecutionResult> {
+  let resolvedUrl: string;
+  let resource: string;
+  try {
+    const parsed = new URL(url, defaultBase);
+    resolvedUrl = parsed.toString();
+    resource = parsed.pathname.replace(/^\/\/+/, "/");
+  } catch {
+    resolvedUrl = url;
+    resource = url;
+  }
+
+  const first = await fetch(resolvedUrl);
   if (first.status !== 402) {
     if (!first.ok) throw new Error(`API request failed: ${first.status} ${first.statusText}`);
-    return { data: (await first.json()) as unknown };
+    const data: unknown = await first.json().catch(async () => {
+      const text = await first.text().catch(() => "");
+      return { response: text };
+    });
+    return { data };
   }
 
   const account = requireAccount();
@@ -183,13 +198,6 @@ export async function payAndFetch(url: string): Promise<PaymentExecutionResult> 
   const price = typeof paymentOffer.price === "string" ? paymentOffer.price : "0.01";
   const asset = typeof paymentOffer.asset === "string" ? paymentOffer.asset : "USDC";
   const payTo = (typeof paymentOffer.payTo === "string" ? paymentOffer.payTo : "0x000000000000000000000000000000000000dEaD") as Address;
-
-  let resource = url;
-  try {
-    resource = new URL(url, "http://localhost:3000").pathname;
-  } catch {
-    // Keep raw url
-  }
 
   const payment: Payment = {
     from: account.address,
@@ -202,7 +210,7 @@ export async function payAndFetch(url: string): Promise<PaymentExecutionResult> 
   const signature = await account.signMessage({ message: JSON.stringify(payment) });
   const header = Buffer.from(JSON.stringify({ payment, signature })).toString("base64");
 
-  const paid = await fetch(url, { headers: { "X-PAYMENT": header } });
+  const paid = await fetch(resolvedUrl, { headers: { "X-PAYMENT": header } });
   const data: unknown = await paid.json().catch(async () => {
     const text = await paid.text().catch(() => "");
     return { error: text || `HTTP ${paid.status}` };

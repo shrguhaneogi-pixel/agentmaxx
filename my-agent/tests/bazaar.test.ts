@@ -979,5 +979,48 @@ describe("Marzban Bazaar Merchant Engine", () => {
       assert.ok(result.error);
       assert.match(String(result.error), /Payment authorization denied/i);
     });
+
+    it("handles null and undefined tool argument payloads gracefully across all tools without crashing", async () => {
+      // 1. haggle_offer with null/undefined
+      const haggleTool = tools.find((t) => t.name === "haggle_offer")!;
+      const haggleNullRes = ((await haggleTool.run(null as any)) as unknown) as Record<string, unknown>;
+      assert.equal(haggleNullRes.status, "error");
+      assert.ok(typeof haggleNullRes.error === "string");
+
+      const haggleUndefRes = ((await haggleTool.run(undefined as any)) as unknown) as Record<string, unknown>;
+      assert.equal(haggleUndefRes.status, "error");
+
+      // 2. pay_invoice with null/undefined
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+      const payNullRes = ((await payTool.run(null as any)) as unknown) as Record<string, unknown>;
+      assert.equal(payNullRes.error, "Missing required parameter: dealId");
+
+      const payUndefRes = ((await payTool.run(undefined as any)) as unknown) as Record<string, unknown>;
+      assert.equal(payUndefRes.error, "Missing required parameter: dealId");
+
+      // 3. get_receipt with null/undefined
+      const receiptTool = tools.find((t) => t.name === "get_receipt")!;
+      const receiptNullRes = ((await receiptTool.run(null as any)) as unknown) as Record<string, unknown>;
+      assert.ok(receiptNullRes.error || receiptNullRes.receiptId);
+
+      // 4. get_country_info with null/undefined
+      const countryTool = tools.find((t) => t.name === "get_country_info")!;
+      const countryNullRes = ((await countryTool.run(null as any)) as unknown) as Record<string, unknown>;
+      assert.match(String(countryNullRes.error), /Missing required parameter: country/i);
+
+      const countryUndefRes = ((await countryTool.run(undefined as any)) as unknown) as Record<string, unknown>;
+      assert.match(String(countryUndefRes.error), /Missing required parameter: country/i);
+    });
+
+    it("strips trailing slashes from baseUrl and handles get_weather connection failures safely", async () => {
+      const weatherTool = tools.find((t) => t.name === "get_weather")!;
+      // Point to an inactive test port to verify graceful error return without throwing
+      const res = ((await weatherTool.run(
+        { city: "Tokyo" },
+        { baseUrl: "http://127.0.0.1:59999///" }
+      )) as unknown) as Record<string, unknown>;
+      assert.ok(res.error, "Weather tool must return an error object on connection failure");
+      assert.match(String(res.error), /Weather service unavailable:/i);
+    });
   });
 });
