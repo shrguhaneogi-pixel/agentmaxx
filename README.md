@@ -10,8 +10,6 @@
 
 <div align="center">
 
-# Marzban: The Agentic Bazaar Merchant
-
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.4.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.3.0-149eca?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
@@ -22,6 +20,8 @@
 [![License MIT](https://img.shields.io/badge/License-MIT-D3F65A?style=flat-square&labelColor=10110F)](./my-agent/LICENSE)
 
 > *"Welcome, traveler, to the Grand Bazaar of Nishapur! I am Marzban—purveyor of rare relics, keeper of confidential reserve floors, and humble servant of honest silver. Inquire of the celestial skies or haggle for the legendary Brass Astrolabe. But heed this counsel: insult my stall with a pittance, and you shall taste the bitter sting of an unforgiving counter-offer!"*
+
+[![Video Thumbnail](https://i.ytimg.com/vi/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/hqdefault.jpg)](https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/view?usp=sharing)   
 
 </div>
 
