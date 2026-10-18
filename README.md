@@ -21,7 +21,28 @@
 
 > *"Welcome, traveler, to the Grand Bazaar of Nishapur! I am Marzban—purveyor of rare relics, keeper of confidential reserve floors, and humble servant of honest silver. Inquire of the celestial skies or haggle for the legendary Brass Astrolabe. But heed this counsel: insult my stall with a pittance, and you shall taste the bitter sting of an unforgiving counter-offer!"*
 
-[![Video Thumbnail](https://i.ytimg.com/vi/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/hqdefault.jpg)](https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/view?usp=sharing)   
+<br>
+
+<video width="100%" max-width="840px" controls preload="metadata" poster="https://img.shields.io/badge/▶_PLAY_DEMO-Marzban_Agentic_Bazaar_Walkthrough-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915">
+  <source src="https://drive.google.com/uc?export=download&id=1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+<br>
+
+<p align="center">
+  <a href="https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/preview" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/▶_LAUNCH_DEMO_VIDEO_PLAYER-marzban__demo01.webm-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915" alt="Launch Demo Video Player">
+  </a>
+  <a href="https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Google_Drive-Open_Standalone_Player-4285F4?style=for-the-badge&logo=googledrive&logoColor=white&labelColor=10110F" alt="Open Standalone Player">
+  </a>
+  <a href="https://drive.google.com/uc?export=download&id=1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Stream_/_Download-WebM_HD-10B981?style=for-the-badge&logo=webrtc&logoColor=white&labelColor=10110F" alt="Direct Stream Download">
+  </a>
+</p>
+
+> 🎬 **Interactive Video Walkthrough**: Click <kbd>▶ LAUNCH DEMO VIDEO PLAYER</kbd> above to stream the high-definition walkthrough (`marzban_demo01.webm`) in the dedicated player with full-screen playback, showcasing live voiceover negotiation, reserve floor defense, buyer confirmation gating, and autonomous x402 Base Sepolia settlement!
 
 </div>
 
@@ -30,6 +51,7 @@
 ## 📑 Interactive Table of Contents
 
 - [🏛️ Executive Overview](#️-executive-overview)
+- [🎬 Interactive Video Demonstration](#-interactive-video-demonstration)
 - [🎯 What Problem Marzban Solves](#-what-problem-marzban-solves)
 - [⚡ Tech Stack & Verified Versions](#-tech-stack--verified-versions)
 - [🛠️ Verified Tool Suite & Verification Matrix](#️-verified-tool-suite--verification-matrix)
@@ -46,6 +68,7 @@
   - [Category 7: Application & Deployment Errors](#category-7-application--deployment-errors)
   - [Category 8: Security & Operational Rules](#category-8-security--operational-rules)
 - [🗺️ Architecture & Codebase Map](#️-architecture--codebase-map)
+- [📜 DevRelay Agent Session Transcript](#-devrelay-agent-session-transcript)
 - [📜 License](#-license)
 
 ---
@@ -58,6 +81,43 @@
 - **Enforces a conservative Buyer Confirmation Authorization Gate** before initiating any financial transaction.
 - **Executes programmatic machine-to-machine micropayments** via the **x402 protocol** with **EIP-191 signatures** on **Base Sepolia**.
 - **Delivers a high-density Autonomous Command Center** interface equipped with live execution telemetry, keyboard command palette (<kbd>⌘K</kbd>), and an interactive SVG Brass Astrolabe visual anchor.
+
+---
+
+## 🎬 Interactive Video Demonstration
+
+Watch the complete, unedited demonstration of Marzban's autonomous commerce loop, multi-round negotiation engine, and x402 settlement:
+
+<div align="center">
+
+<video width="100%" max-width="840px" controls preload="metadata" poster="https://img.shields.io/badge/▶_PLAY_DEMO-Marzban_Agentic_Bazaar_Walkthrough-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915">
+  <source src="https://drive.google.com/uc?export=download&id=1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF" type="video/webm">
+  Your browser does not support the video tag.
+</video>
+
+<br>
+
+<p align="center">
+  <a href="https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/preview" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/▶_LAUNCH_DEMO_VIDEO_PLAYER-marzban__demo01.webm-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915" alt="Launch Demo Video Player">
+  </a>
+  <a href="https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Google_Drive-Open_Standalone_Player-4285F4?style=for-the-badge&logo=googledrive&logoColor=white&labelColor=10110F" alt="Open Standalone Player">
+  </a>
+  <a href="https://drive.google.com/uc?export=download&id=1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Stream_/_Download-WebM_HD-10B981?style=for-the-badge&logo=webrtc&logoColor=white&labelColor=10110F" alt="Direct Stream Download">
+  </a>
+</p>
+
+</div>
+
+| Walkthrough Milestone | Observable Behavior | Architectural Proof |
+| :--- | :--- | :--- |
+| **1. Stall Initialization** | Catalog presentation with 6 wares | Zero leakage of wholesale costs or reserve floors |
+| **2. Multi-Round Haggling** | Non-linear counter-offers & mood shifts | Concession spread enforces `threshold + safeMargin` |
+| **3. Deal Reservation** | Deal locked at agreed price | Temporary reservation with idempotency lock |
+| **4. Buyer Authorization Gate** | Model prevented from auto-purchasing | Requires explicit affirmative confirmation from user |
+| **5. x402 Micropayment** | HTTP 402 challenge intercepted & settled | Viem signs EIP-191 payload; Base Sepolia verification |
 
 ---
 
@@ -785,6 +845,68 @@ agentmaxx/
 
 ---
 
+## 📜 DevRelay Agent Session Transcript
+
+The architectural integrity, cryptographic boundaries, and stateful negotiation mechanics of this codebase were evaluated and verified in the **AntiGravity Codebase Technical Evaluation** session. The complete interactive transcript is indexed and embeddable via **DevRelay**:
+
+<details open>
+<summary><b>Session Record: AntiGravity Codebase Technical Evaluation (ID: <code>edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe</code>)</b></summary>
+
+<br>
+
+### 🌐 DEV / Forem Native Liquid Embed
+When publishing technical documentation or engineering retrospectives on [DEV (dev.to)](https://dev.to), embed the complete interactive agent session using DEV's native Liquid tag:
+
+```liquid
+{% agent_session edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe %}
+```
+
+Or embed a specific contiguous range of messages (0-indexed slice):
+
+```liquid
+{% agent_session edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe 0..5 %}
+```
+
+---
+
+### 💻 Antigravity IDE Interactive Replay
+In the Google Antigravity IDE environment, launch the live interactive transcript, prompt sequence, tool execution trace, and validation artifacts:
+
+- 🚀 **[Open Interactive Session in Antigravity](conversation://edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe)**
+- 📄 **Transcript Source**: `file:///C:/Users/Dell/.gemini/antigravity/brain/edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe/.system_generated/logs/transcript.jsonl`
+- 📑 **Evaluation Walkthrough**: [walkthrough.md](file:///C:/Users/Dell/.gemini/antigravity/brain/edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe/walkthrough.md)
+
+---
+
+### 📊 Evaluated Invariants & Architectural Findings
+
+| Architectural Domain | Evaluated Invariant | Verification Result |
+| :--- | :--- | :--- |
+| **Monorepo Layout** | Root scripts delegating to `my-agent/` (Next.js 16 App Router) | **Verified** — Turbo/Webpack build pipelines operate cleanly from both root and workspace |
+| **Bazaar State Machine** | 6 deterministic wares, non-linear mood formula, 4-round limit | **Verified** — Base prices and reserve floors dynamically calculated; floor never disclosed |
+| **Floor-Hiding Guarantee** | Counter-offers strictly enforce `Math.max(2, Math.floor((base - threshold) * 0.1))` | **Verified** — Zero leakage of wholesale costs or private margins in any negotiation state |
+| **Buyer Authorization Gate** | Multi-tier context analysis blocking unauthorized automatic checkout | **Verified** — Agent cannot trigger `pay_invoice` without affirmative user confirmation |
+| **x402 Micropayments** | HTTP 402 challenge, EIP-191 Viem signing, Base Sepolia settlement | **Verified** — Machine-to-machine payment protocol verified with idempotent deal completion |
+| **Automated Test Coverage** | 50 comprehensive unit and integration tests | **50/50 Passing** — 100% test pass rate with zero flaky assertions |
+
+---
+
+### 🛠️ DevRelay CLI Commands
+Query or export this session directly from your local terminal:
+
+```bash
+# Retrieve full session details via DevRelay CLI
+devrelay sessions get edbaa0f3-b8a5-4b8d-8d96-361e8fb086fe
+
+# List all saved agent sessions
+devrelay sessions list
+```
+
+</details>
+
+---
+
 ## 📜 License
 
 Distributed under the **MIT License**. See [LICENSE](./my-agent/LICENSE) for terms.
+
