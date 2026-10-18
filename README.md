@@ -1,12 +1,69 @@
+```text
+  __  __          _____  ______ ____          _   _ 
+ |  \/  |   /\   |  __ \|___  /|  _ \   /\   | \ | |
+ | \  / |  /  \  | |__) |  / / | |_) | /  \  |  \| |
+ | |\/| | / /\ \ |  _  /  / /  |  _ < / /\ \ | . ` |
+ | |  | |/ ____ \| | \ \ / /__ | |_) / ____ \| |\  |
+ |_|  |_/_/    \_\_|  \_\_____/|____/_/    \_\_| \_|
+     THE AGENTIC BAZAAR MERCHANT & COMMAND CENTER
+```
+
+<div align="center">
+
 ![Marzban Logo](my-agent/public/risein-logo.svg)
 
 # Marzban: The Agentic Bazaar Merchant
 
-**Marzban** is an autonomous, stateful AI bazaar merchant built on **Next.js 16**, the **Google Gen AI SDK** (`@google/genai`), and **viem**. Operating within a theatrical Persian-inspired marketplace, Marzban negotiates item prices in silver, defends secret reserve floors with dynamic mood-based concessions, enforces strict buyer confirmation gates before payment execution, and signs on-chain machine-to-machine micropayments via the **x402 protocol** on **Base Sepolia**.
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.4.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![React 19](https://img.shields.io/badge/React-19.3.0-149eca?style=flat-square&logo=react)](https://react.dev/)
+[![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Google Gen AI](https://img.shields.io/badge/@google/genai-2.24.0-4285F4?style=flat-square&logo=google)](https://www.npmjs.com/package/@google/genai)
+[![Viem Web3](https://img.shields.io/badge/viem-2.56.9-2030D8?style=flat-square&logo=ethereum)](https://viem.sh/)
+[![Network Base Sepolia](https://img.shields.io/badge/Network-Base_Sepolia-0052FF?style=flat-square&logo=coinbase)](https://sepolia.basescan.org/)
+[![Automated Tests](https://img.shields.io/badge/Tests-50%2F50_Passing-10B981?style=flat-square&logo=checkmarx)](https://nodejs.org/api/test.html)
+[![License MIT](https://img.shields.io/badge/License-MIT-D3F65A?style=flat-square&labelColor=10110F)](./my-agent/LICENSE)
+
+> *"Welcome, traveler, to the Grand Bazaar of Nishapur! I am Marzban—purveyor of rare relics, keeper of confidential reserve floors, and humble servant of honest silver. Inquire of the celestial skies or haggle for the legendary Brass Astrolabe. But heed this counsel: insult my stall with a pittance, and you shall taste the bitter sting of an unforgiving counter-offer!"*
+
+</div>
 
 ---
 
-## What Problem Your AI Agent is Solving
+## 📑 Interactive Table of Contents
+
+- [🏛️ Executive Overview](#️-executive-overview)
+- [🎯 What Problem Marzban Solves](#-what-problem-marzban-solves)
+- [⚡ Tech Stack & Verified Versions](#-tech-stack--verified-versions)
+- [🛠️ Verified Tool Suite & Verification Matrix](#️-verified-tool-suite--verification-matrix)
+- [📦 Collapsible Tool Specifications & Schemas](#-collapsible-tool-specifications--schemas)
+- [🧠 Supported AI Models & Dynamic Switching](#-supported-ai-models--dynamic-switching)
+- [🚀 Quick Start & Local Setup](#-quick-start--local-setup)
+- [🧰 Interactive Troubleshooting Guide](#-interactive-troubleshooting-guide)
+  - [Category 1: Installation & Build Errors](#category-1-installation--build-errors)
+  - [Category 2: Environment & Credentials](#category-2-environment--credentials)
+  - [Category 3: AI Model & Provider Errors](#category-3-ai-model--provider-errors)
+  - [Category 4: Tool Invocation & Dispatch Errors](#category-4-tool-invocation--dispatch-errors)
+  - [Category 5: Wallet & Filesystem Persistence Errors](#category-5-wallet--filesystem-persistence-errors)
+  - [Category 6: Payment & x402 Micropayment Errors](#category-6-payment--x402-micropayment-errors)
+  - [Category 7: Application & Deployment Errors](#category-7-application--deployment-errors)
+  - [Category 8: Security & Operational Rules](#category-8-security--operational-rules)
+- [🗺️ Architecture & Codebase Map](#️-architecture--codebase-map)
+- [📜 License](#-license)
+
+---
+
+## 🏛️ Executive Overview
+
+**Marzban** is an autonomous, stateful AI bazaar merchant application built on **Next.js 16**, the **Google Gen AI SDK** (`@google/genai`), and **viem**. Operating within a theatrical Persian marketplace narrative, Marzban:
+- **Negotiates item prices in silver** across a bounded, stateful multi-round engine.
+- **Defends secret reserve floors** with non-linear mood mechanics (`cheerful`, `neutral`, `grumpy`).
+- **Enforces a conservative Buyer Confirmation Authorization Gate** before initiating any financial transaction.
+- **Executes programmatic machine-to-machine micropayments** via the **x402 protocol** with **EIP-191 signatures** on **Base Sepolia**.
+- **Delivers a high-density Autonomous Command Center** interface equipped with live execution telemetry, keyboard command palette (<kbd>⌘K</kbd>), and an interactive SVG Brass Astrolabe visual anchor.
+
+---
+
+## 🎯 What Problem Marzban Solves
 
 Modern autonomous AI agents face severe reliability, safety, and transactional challenges when interacting with real users and decentralized financial systems:
 
@@ -16,150 +73,334 @@ Modern autonomous AI agents face severe reliability, safety, and transactional c
 
 ---
 
-## Tech Stack & Installed Versions
+## ⚡ Tech Stack & Verified Versions
 
-All dependencies and runtime versions are verified against `package.json` and the resolved lockfile:
+All dependencies and runtime versions are strictly verified against `package.json` and the resolved lockfile:
 
-- **Framework:** [Next.js](https://nextjs.org/) `16.4.0` (declared `^16.3.6`, App Router, Webpack/Turbopack runtime)
-- **UI & Component Architecture:** [React](https://react.dev/) `19.3.0` & `react-dom` `19.3.0`
-- **Styling & Design System:** [Tailwind CSS](https://tailwindcss.com/) `4.3.3` (with `@tailwindcss/postcss` `4.3.3`, `tw-animate-css` `1.4.0`)
-- **Primitive Components:** `@base-ui/react` `1.8.0`, `lucide-react` `1.48.0`, `class-variance-authority` `0.7.1`
-- **AI Model Orchestration:** [Google Gen AI SDK](https://www.npmjs.com/package/@google/genai) (`@google/genai`) `2.24.0`
-- **Web3 & Cryptography:** [viem](https://viem.sh/) `2.56.9` (Base Sepolia testnet, EIP-191 signing, address derivation)
-- **TypeScript:** [TypeScript](https://www.typescriptlang.org/) `5.9.3` (strict type-checking via `tsc --noEmit`)
-- **Test Runner & Execution:** [Node.js Test Runner](https://nodejs.org/api/test.html) with [jiti](https://github.com/unjs/jiti) `2.4.2` (`node --import jiti/register --test`)
-- **Runtime Environment:** [Node.js](https://nodejs.org/) `>= 20.0.0` (verified on Node `v24.19.0`)
+| Technology / Package | Verified Version | Purpose in Architecture |
+| :--- | :--- | :--- |
+| **[Next.js](https://nextjs.org/)** | `16.4.0` | App Router, Server Components, API route handlers, and Webpack build pipeline |
+| **[React](https://react.dev/)** | `19.3.0` | Modern React 19 concurrent features and client UI components |
+| **[@google/genai](https://www.npmjs.com/package/@google/genai)** | `2.24.0` | Google Gen AI SDK multi-step tool calling orchestration loop |
+| **[viem](https://viem.sh/)** | `2.56.9` | EVM keypair generation, EIP-191 personal message signing, Base Sepolia RPC balance checks |
+| **[Tailwind CSS](https://tailwindcss.com/)** | `4.3.3` | Tailwind v4 `@theme inline` CSS-first token system and responsive layout grid |
+| **[@base-ui/react](https://base-ui.com/)** | `1.8.0` | Accessible unstyled primitives for collapsible accordions and command menus |
+| **[lucide-react](https://lucide.dev/)** | `1.48.0` | Technical command center icons and telemetry status symbols |
+| **[TypeScript](https://www.typescriptlang.org/)** | `5.9.3` | Strict type validation with `tsc --noEmit` across all agent modules |
+| **[Node.js Test Runner](https://nodejs.org/api/test.html)** | `>= 20.0.0` | Native test suite via `node --import jiti/register --test` (50/50 passing) |
 
 ---
 
-## Agent Capabilities & Verified Tool Suite
+## 🛠️ Verified Tool Suite & Verification Matrix
 
 Marzban exposes **9 fully verified, production-hardened tools** to the AI model dispatcher. Every tool matches the `@google/genai` JSON schema specification (`parametersJsonSchema`), provides defensive type casting, supports camelCase and snake_case parameter aliases, and handles missing or malformed inputs without crashing the agent loop.
 
-### Tool Verification Matrix
-
-| Tool Name | Category | Action Type | Schema & Parameters | Execution Path & Handlers | Verification Status |
+| Tool Identifier | Domain | Action Type | Expected Parameters | Handler Path | Verification Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `list_wares` | Commerce | Read-Only | `{ type: "object", properties: {} }` | `tools.ts` -> `listWares()` in `bazaar.ts` | **Verified** (Unit & Integration) |
-| `haggle_offer` | Commerce | State-Changing | `itemId` (string, req), `offer` (integer, req) | `tools.ts` -> `haggle(itemId, offer)` in `bazaar.ts` | **Verified** (42 Tests Suite) |
-| `pay_invoice` | Commerce | State-Changing | `dealId` (string, req) | `tools.ts` -> `verifyBuyerConfirmation()` -> `beginPayment()` -> `payAndFetch(/api/bazaar/checkout)` | **Verified** (Gate & State Machine) |
-| `get_receipt` | Commerce | Read-Only | `receiptId` (str, opt), `dealId` (str, opt), `itemId` (str, opt) | `tools.ts` -> `getReceipt(id)` in `bazaar.ts` | **Verified** (Idempotency Tested) |
-| `get_stall_status` | Commerce | Read-Only | `{ type: "object", properties: {} }` | `tools.ts` -> `getStallStatus()` in `bazaar.ts` | **Verified** (Sanitization Verified) |
-| `get_weather` | Utility | State-Changing | `city` (string, req) | `tools.ts` -> `payAndFetch(/api/weather?city=...)` | **Verified** (x402 Flow Verified) |
-| `get_my_wallet` | Wallet | Read-Only | `{ type: "object", properties: {} }` | `tools.ts` -> `getWalletAddress()` & `getWalletBalance()` in `wallet.ts` | **Verified** (Base Sepolia RPC) |
-| `get_joke` | Utility | Read-Only | `{ type: "object", properties: {} }` | `tools.ts` -> official joke API with 4s timeout & offline fallback | **Verified** (Resilience Tested) |
-| `get_country_info` | Utility | Read-Only | `country` (string, req) | `tools.ts` -> offline curated 24-country DB + restcountries.com API | **Verified** (Curated & Live Tested) |
+| `list_wares` | Commerce | `READ-ONLY` | *None* | `tools.ts` ➔ `listWares()` | **Verified** (Sanitized) |
+| `haggle_offer` | Commerce | `STATE-CHANGING` | `itemId` (str), `offer` (int) | `tools.ts` ➔ `haggle()` | **Verified** (42 Invariants) |
+| `pay_invoice` | Commerce | `STATE-CHANGING` | `dealId` (str) | `tools.ts` ➔ `verifyBuyerConfirmation()` ➔ `payAndFetch()` | **Verified** (Gate Enforced) |
+| `get_receipt` | Commerce | `READ-ONLY` | `receiptId` (str, opt), `dealId` (str, opt) | `tools.ts` ➔ `getReceipt()` | **Verified** (Idempotent) |
+| `get_stall_status` | Commerce | `READ-ONLY` | *None* | `tools.ts` ➔ `getStallStatus()` | **Verified** (Sanitized) |
+| `get_weather` | Utility | `STATE-CHANGING` | `city` (str) | `tools.ts` ➔ `payAndFetch(/api/weather)` | **Verified** (x402 Flow) |
+| `get_my_wallet` | Wallet | `READ-ONLY` | *None* | `tools.ts` ➔ `getWalletBalance()` | **Verified** (Base Sepolia RPC) |
+| `get_joke` | Utility | `READ-ONLY` | *None* | `tools.ts` ➔ Joke API / Offline Fallback | **Verified** (Timeout Resilient) |
+| `get_country_info` | Utility | `READ-ONLY` | `country` (str) | `tools.ts` ➔ Curated DB + restcountries.com | **Verified** (Curated & Live) |
 
 ---
 
-### Detailed Tool Specifications
+## 📦 Collapsible Tool Specifications & Schemas
 
-#### 1. `list_wares`
-- **Purpose:** Inspect all wares offered in Marzban's stall.
-- **Parameters:** None.
-- **Behavior & Security:** Returns public wares (`id`, `name`, `description`, `basePrice`, `askingPrice`, `availability`, `roundsConsumed`, `roundsRemaining`). **Strictly sanitizes and omits** `privateCost`, `threshold`, and internal margin formulas.
+Click on any tool below to inspect its exact `@google/genai` parameter declaration, security invariants, and sample directive.
 
-#### 2. `haggle_offer`
-- **Purpose:** Submit a bid in silver for a specific item.
-- **Parameters:**
-  - `itemId` (string, required): Item identifier (`brass-astrolabe`, `saffron-tin`, `silk-scarf`, `haunted-lamp`, `spice-box`, `map-scroll`). Also accepts normalized titles (e.g., "Brass Astrolabe").
-  - `offer` (integer, required): Positive integer silver amount.
-- **Behavior & Invariants:**
-  - Rejects zero, negative, floating-point, or non-numeric offers.
-  - Returns `negotiation_closed` if 4 rounds are exhausted and offer is below standing asking price.
-  - Returns `rejected_insulting` if offer is below 70% of cost (degrades merchant mood).
-  - Returns `accepted` if offer meets or exceeds private threshold: `min(basePrice, ceil(privateCost * 1.15 * moodFactor))`. Agrees price at `min(offer, askingPrice)` and reserves item.
-  - Returns `counter` with counter price strictly above private floor: `counterPrice > threshold`.
+<details>
+<summary><b>1. <code>list_wares</code> — Inspect Bazaar Inventory (Read-Only)</b></summary>
 
-#### 3. `pay_invoice`
-- **Purpose:** Trigger checkout and execute machine-to-machine x402 payment using the agent's wallet.
-- **Parameters:**
-  - `dealId` (string, required): Active pending deal identifier (`deal-xxxxxxxx`).
-- **Authorization Gate:** Evaluates `verifyBuyerConfirmation(dealId, ctx)`. Fails if the user hesitated ("wait", "don't pay"), asked a question, proposed a different price, named another item, or if the deal was created in the current turn.
-- **Concurrency & State Guard:** Locks deal in `processing` state via `beginPayment()`. On network failure, triggers `failPayment()` to ensure the item **remains reserved** for user retry.
+<br>
 
-#### 4. `get_receipt`
-- **Purpose:** Retrieve proof of completed purchase.
-- **Parameters:**
-  - `receiptId` (string, optional): Specific receipt identifier (`rcpt-xxxxxxxx`).
-  - `dealId` (string, optional): Associated deal identifier.
-  - `itemId` (string, optional): Associated item identifier.
-- **Behavior:** Returns receipt metadata including SHA-256 derived Base Sepolia transaction hash (`txHash`), silver price, timestamp, and payer address. Defaults to most recent receipt if unspecified.
+- **Action Type:** `READ-ONLY`
+- **Purpose:** Enumerates all items offered for sale in Marzban's stall.
+- **Security Invariant:** Strictly filters out `privateCost`, `threshold`, and mood concession calculations.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "list_wares",
+  "description": "List all wares available for sale in Marzban's bazaar stall, including asking prices, availability, and remaining negotiation rounds.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}
+```
+- **Sample Directive:** *"Show me what wares you have for sale in the bazaar."*
 
-#### 5. `get_stall_status`
-- **Purpose:** Check stall operational metrics and merchant disposition.
-- **Parameters:** None.
-- **Behavior:** Returns current `mood` (`cheerful`, `neutral`, `grumpy`), public inventory wares, active pending deals, and total completed receipts count.
+</details>
 
-#### 6. `get_weather`
-- **Purpose:** Query paid city weather data demonstrating HTTP 402 micropayments.
-- **Parameters:**
-  - `city` (string, required): City name (e.g. `Mumbai`, `London`, `Tokyo`).
-- **Behavior:** Issues GET to `/api/weather`. Receives HTTP 402 challenge (`price: 0.01 USDC`). Wallet signs EIP-191 authorization. Retries with `X-PAYMENT` header to unlock live temperature and conditions.
+<details>
+<summary><b>2. <code>haggle_offer</code> — Submit Bid in Silver (State-Changing)</b></summary>
 
-#### 7. `get_my_wallet`
-- **Purpose:** Query the agent's EVM wallet address and live testnet balance.
-- **Parameters:** None.
-- **Behavior:** Reads address from `.env` (`WALLET_PRIVATE_KEY`), in-memory state, local `.agent-wallet.json`, or ephemeral `/tmp` storage. Queries Base Sepolia via Viem RPC (`eth_getBalance`) with timeout protection.
+<br>
 
-#### 8. `get_joke`
-- **Purpose:** Provide programming humor.
-- **Parameters:** None.
-- **Behavior:** Fetches from `official-joke-api.appspot.com` with 4-second timeout. If offline or rate-limited, safely returns curated fallback joke without throwing uncaught exceptions.
+- **Action Type:** `STATE-CHANGING`
+- **Purpose:** Propose a price in silver for a specific bazaar ware.
+- **Invariants & Negotiation Mechanics:**
+  - Enforces positive integer offers (`offer > 0 && Number.isInteger(offer)`).
+  - Maximum 4 negotiation rounds per item; rejects further bids unless meeting final asking price.
+  - Insulting offers (`offer < 0.70 * privateCost`) degrade mood to `grumpy` and return `rejected_insulting`.
+  - Accept threshold formula: `min(basePrice, ceil(privateCost * 1.15 * moodFactor))`.
+  - Counter-price guarantee: Always strictly above private threshold (`counterPrice > threshold`).
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "haggle_offer",
+  "description": "Make a haggle offer on a bazaar ware. Silver prices only. Marzban may accept, counter-offer, or be insulted if offer is too low.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {
+      "itemId": {
+        "type": "string",
+        "description": "Unique ID of the item (e.g. brass-astrolabe, saffron-tin, silk-scarf, haunted-lamp, spice-box, map-scroll)."
+      },
+      "offer": {
+        "type": "integer",
+        "description": "Silver amount offered (positive integer only)."
+      }
+    },
+    "required": ["itemId", "offer"]
+  }
+}
+```
+- **Sample Directive:** *"I offer 75 silver for the Brass Astrolabe."*
 
-#### 9. `get_country_info`
-- **Purpose:** Query country capital, population, region, and local cuisine.
-- **Parameters:**
-  - `country` (string, required): Country name.
-- **Behavior:** Fast-path matches against curated local database of 24+ countries (including India, France, Japan, USA, UAE, etc.). Falls back to `restcountries.com` with a 4s timeout. Validates empty inputs and returns actionable guidance.
+</details>
+
+<details>
+<summary><b>3. <code>pay_invoice</code> — Execute x402 Settlement (State-Changing)</b></summary>
+
+<br>
+
+- **Action Type:** `STATE-CHANGING`
+- **Purpose:** Triggers machine-to-machine checkout for an agreed bazaar deal.
+- **Critical Security Gate:**
+  - Evaluates `verifyBuyerConfirmation(dealId, ctx)`.
+  - Blocks payment if user expressed hesitation ("wait", "cancel"), asked a question ("can I pay?"), named a different item, or if the deal was created in the current turn.
+- **Concurrency Guard:** Locks deal in `processing` state during `beginPayment()`. On network failure, triggers `failPayment()` to preserve reservation for user retry.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "pay_invoice",
+  "description": "Pay for an agreed bazaar deal using the agent's wallet via machine-to-machine x402 payment.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {
+      "dealId": {
+        "type": "string",
+        "description": "The active deal ID from an accepted haggle (e.g. deal-xxxxxxxx)."
+      }
+    },
+    "required": ["dealId"]
+  }
+}
+```
+- **Sample Directive:** *"Yes, I confirm purchase of deal deal-12345678. Proceed with payment."*
+
+</details>
+
+<details>
+<summary><b>4. <code>get_receipt</code> — Retrieve Purchase Proof (Read-Only)</b></summary>
+
+<br>
+
+- **Action Type:** `READ-ONLY`
+- **Purpose:** Fetches immutable receipt proof for a completed deal.
+- **Behavior:** Returns SHA-256 derived Base Sepolia transaction hash (`txHash`), silver price, timestamp, and payer address. Defaults to most recent receipt if unspecified.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "get_receipt",
+  "description": "Get a receipt for a completed purchase by receipt ID, deal ID, or item ID.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {
+      "receiptId": { "type": "string", "description": "Receipt ID (e.g. rcpt-xxxxxxxx)" },
+      "dealId": { "type": "string", "description": "Associated deal ID" },
+      "itemId": { "type": "string", "description": "Associated item ID" }
+    }
+  }
+}
+```
+- **Sample Directive:** *"Show me the receipt for my last bazaar purchase."*
+
+</details>
+
+<details>
+<summary><b>5. <code>get_stall_status</code> — Check Stall Disposition & Metrics (Read-Only)</b></summary>
+
+<br>
+
+- **Action Type:** `READ-ONLY`
+- **Purpose:** Inspects merchant mood and operational metrics without leaking margins.
+- **Behavior:** Returns sanitized status: `mood` (`cheerful` / `neutral` / `grumpy`), public inventory wares, active pending deals, and completed receipts count.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "get_stall_status",
+  "description": "Check the current status of Marzban's bazaar stall: merchant mood, inventory count, pending deals, and sales stats.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}
+```
+- **Sample Directive:** *"What is the current mood and status of Marzban's bazaar stall?"*
+
+</details>
+
+<details>
+<summary><b>6. <code>get_weather</code> — Query Paid Weather API via x402 (State-Changing)</b></summary>
+
+<br>
+
+- **Action Type:** `STATE-CHANGING`
+- **Purpose:** Demonstrates live x402 micropayments on external HTTP endpoints.
+- **Execution Path:** Issues GET to `/api/weather`. Catches HTTP 402 challenge (`price: 0.01 USDC`). Wallet signs EIP-191 claim. Retries with `X-PAYMENT` header to unlock live temperature and weather report.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "get_weather",
+  "description": "Check current weather for any city. Demonstrates agent-to-agent x402 micropayments.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {
+      "city": { "type": "string", "description": "City name (e.g. Mumbai, Tokyo, London)" }
+    },
+    "required": ["city"]
+  }
+}
+```
+- **Sample Directive:** *"What's the weather in Mumbai?"*
+
+</details>
+
+<details>
+<summary><b>7. <code>get_my_wallet</code> — Inspect Base Sepolia Keypair (Read-Only)</b></summary>
+
+<br>
+
+- **Action Type:** `READ-ONLY`
+- **Purpose:** Returns the agent's EVM public address and live Base Sepolia testnet balance.
+- **Storage Resilience:** Reads address from `.env` (`WALLET_PRIVATE_KEY`), in-memory state, local `.agent-wallet.json`, or ephemeral `/tmp` storage.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "get_my_wallet",
+  "description": "Get the agent's wallet address and Base Sepolia testnet balance.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}
+```
+- **Sample Directive:** *"What's in your wallet?"*
+
+</details>
+
+<details>
+<summary><b>8. <code>get_joke</code> — Programming Humor with Offline Fallback (Read-Only)</b></summary>
+
+<br>
+
+- **Action Type:** `READ-ONLY`
+- **Purpose:** Fetches programming humor from external API with 4-second timeout and offline curated fallback protection.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "get_joke",
+  "description": "Get a random programming joke.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {}
+  }
+}
+```
+- **Sample Directive:** *"Tell me a programming joke."*
+
+</details>
+
+<details>
+<summary><b>9. <code>get_country_info</code> — Country Intelligence Database (Read-Only)</b></summary>
+
+<br>
+
+- **Action Type:** `READ-ONLY`
+- **Purpose:** Returns capital, population, region, and local cuisine.
+- **Execution Path:** Evaluates against curated fast-path offline database of 24+ countries (India, France, Japan, USA, UAE, etc.), falling back to `restcountries.com` with a 4s timeout.
+- **Tool Declaration Schema:**
+```json
+{
+  "name": "get_country_info",
+  "description": "Get quick information about a country including capital, population, region, and local dish.",
+  "parametersJsonSchema": {
+    "type": "object",
+    "properties": {
+      "country": { "type": "string", "description": "Country name (e.g. Japan, France, India)" }
+    },
+    "required": ["country"]
+  }
+}
+```
+- **Sample Directive:** *"Tell me about Japan."*
+
+</details>
 
 ---
 
-## Supported AI Models & Versioning
+## 🧠 Supported AI Models & Dynamic Switching
 
 Marzban is powered by the **Google Gen AI SDK** (`@google/genai` `v2.24.0`). The agent orchestration loop in `my-agent/agent/agent.ts` uses function calling declarations compatible with all modern Gemini models.
 
-### Model Matrix
+### Model Compatibility Matrix
 
-| Model Identifier | Version / Alias | Status | Tool-Calling Support | Description |
+| Model Identifier | Release Type | Default Status | Tool-Calling Support | Optimal Use Case |
 | :--- | :--- | :--- | :--- | :--- |
-| `gemini-flash-latest` | Default Alias | **Default** | Full (`parametersJsonSchema`) | Ultra-fast multimodal reasoning, recommended for lowest latency. |
-| `gemini-2.5-flash` | Production Release | Supported | Full | Latest Gemini 2.5 Flash model with superior reasoning and tool precision. |
-| `gemini-2.0-flash` | Production Release | Supported | Full | High-speed 2.0 series model with robust multi-turn instruction following. |
-| `gemini-1.5-flash` | Dated Release | Supported | Full | High-throughput, cost-efficient model. |
-| `gemini-1.5-pro` | Production Release | Supported | Full | Complex reasoning model for deep conversational negotiation. |
-| `gemini-2.5-pro` | Production Release | Supported | Full | Flagship reasoning engine with advanced structured output capabilities. |
+| `gemini-flash-latest` | Dynamic Alias | **Default** | Full (`parametersJsonSchema`) | Ultra-fast reasoning & minimal latency |
+| `gemini-2.5-flash` | Production Release | Supported | Full | Superior multi-tool precision & haggling logic |
+| `gemini-2.0-flash` | Production Release | Supported | Full | High-speed multi-turn instruction following |
+| `gemini-1.5-flash` | Dated Release | Supported | Full | Cost-efficient high-throughput queries |
+| `gemini-1.5-pro` | Production Release | Supported | Full | Deep conversational negotiation & nuance |
+| `gemini-2.5-pro` | Production Release | Supported | Full | Flagship model for complex structured orchestration |
 
-### How to Switch Models
+### Dynamic Model Switching Guide
 
-Configure the model via the `GEMINI_MODEL` environment variable in `my-agent/.env`:
+You can switch the active reasoning model without changing a single line of application code:
 
-```bash
+1. **Via `.env` Configuration:**
+```env
 # In my-agent/.env:
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Or pass it dynamically when running the application:
-
+2. **Via Dynamic CLI Runtime Flag:**
 ```bash
 # Windows PowerShell
-$env:GEMINI_MODEL="gemini-2.0-flash"; npm run dev
+$env:GEMINI_MODEL="gemini-2.0-flash"; npm run dev --prefix my-agent
 
 # Linux / macOS
-GEMINI_MODEL=gemini-2.0-flash npm run dev
+GEMINI_MODEL=gemini-2.0-flash npm run dev --prefix my-agent
 ```
 
-Restart the development server after modifying `.env`. The UI header will display the active engine identifier with a live status indicator.
+> [!NOTE]
+> The Command Center header dynamically reports the active model in the telemetry strip (e.g. `ENGINE: gemini-2.5-flash`) with a live pulsing connectivity indicator.
 
 ---
 
-## Quick Start & Local Setup
+## 🚀 Quick Start & Local Setup
 
 ### 1. Prerequisites
-- **Node.js:** `v20.0.0` or higher (`node -v` to check; v24.19.0 verified).
-- **Gemini API Key:** Free key from [Google AI Studio](https://aistudio.google.com/apikey).
+- **Node.js:** `v20.0.0` or higher (`node -v` to verify; verified on `v24.19.0`).
+- **Gemini API Key:** Obtain a free key from [Google AI Studio](https://aistudio.google.com/apikey).
 
-### 2. Installation
+### 2. Clone & Install Dependencies
 ```bash
 # Clone the repository
 git clone https://github.com/your-org/agentmaxx.git
@@ -169,7 +410,7 @@ cd agentmaxx/my-agent
 npm install
 ```
 
-### 3. Environment Configuration
+### 3. Configure Environment Variables
 Copy `.env.example` to `.env` inside `my-agent/`:
 ```bash
 cp .env.example .env
@@ -184,9 +425,12 @@ GEMINI_API_KEY=your_actual_gemini_api_key_here
 GEMINI_MODEL=gemini-flash-latest
 
 # Optional: An existing EVM test private key (64 hex characters starting with 0x)
-# If omitted, click "Create wallet" in the web UI.
+# If left blank, simply click <Create wallet> in the web UI.
 WALLET_PRIVATE_KEY=
 ```
+
+> [!WARNING]
+> Never commit `.env` or `.agent-wallet.json` to version control. Both root `.gitignore` and `my-agent/.gitignore` explicitly exclude these secret files.
 
 ### 4. Run Development Server
 ```bash
@@ -197,11 +441,17 @@ npm run dev
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser. Click **Create wallet** in the Setup panel to initialize the agent's cryptographic wallet.
+Open [http://localhost:3000](http://localhost:3000) in your browser. Click <kbd>Create wallet</kbd> in the Setup panel on the left to initialize your agent's cryptographic keypair on Base Sepolia.
 
-### 5. Running the Automated Test Suite
+### 5. Keyboard Navigation & Shortcuts
+- <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd>: Open the global Command Palette.
+- <kbd>↑</kbd> / <kbd>↓</kbd>: Navigate commands and quick directives.
+- <kbd>Enter ↵</kbd>: Execute directive or select command.
+- <kbd>ESC</kbd>: Close modal or clear directive input.
+
+### 6. Verify Automated Test Suite
 ```bash
-# Run the 50-test verification suite
+# Run the complete 50-test verification suite
 npm test --prefix my-agent
 
 # Run strict TypeScript type check
@@ -213,13 +463,19 @@ npm run build --prefix my-agent
 
 ---
 
-## Comprehensive Troubleshooting & Common Errors
+## 🧰 Interactive Troubleshooting Guide
+
+Click on any category below to reveal exact symptoms, codebase root causes, diagnostic commands, and concrete solutions.
 
 ### Category 1: Installation & Build Errors
 
-#### Problem 1.1: Node.js Version Incompatibility
+<details>
+<summary><b>Problem 1.1: Node.js Version Incompatibility (&lt; v20.0.0)</b></summary>
+
+<br>
+
 - **Symptoms:** `SyntaxError: Unexpected token '?'` or `Error: Node.js version unsupported`.
-- **Root Cause:** Next.js 16 and modern ECMAScript dependencies require Node.js `>= 20.0.0`.
+- **Root Cause:** Next.js 16 and modern ECMAScript modules require Node.js `>= 20.0.0`.
 - **How to Diagnose:** Run `node -v` in your terminal.
 - **Solution:** Install Node.js LTS (v20 or v22) using [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm):
   ```bash
@@ -228,16 +484,28 @@ npm run build --prefix my-agent
   ```
 - **Verification:** Run `node -v` and confirm output starts with `v20.` or `v22.`.
 
-#### Problem 1.2: Turbopack Build Conflicts on Windows
-- **Symptoms:** `next build` hangs or fails with Turbopack compilation errors.
-- **Root Cause:** Next.js 16 defaults to Turbopack in some CLI flows where native symlinks or webpack configurations are required.
-- **How to Diagnose:** Check `package.json` scripts.
+</details>
+
+<details>
+<summary><b>Problem 1.2: Turbopack Build Conflicts on Windows</b></summary>
+
+<br>
+
+- **Symptoms:** `next build` hangs or fails with Turbopack PostCSS worker errors on Windows.
+- **Root Cause:** Next.js 16 defaults to Turbopack in some CLI flows where Windows symlinks and child processes conflict.
+- **How to Diagnose:** Inspect `package.json` build scripts.
 - **Solution:** Use the configured production build script: `next build --webpack`.
 - **Verification:** Run `npm run build --prefix my-agent` and observe `✓ Compiled successfully`.
 
-#### Problem 1.3: Windows OneDrive / Background Process File Locking (`EPERM`)
-- **Symptoms:** `Error: EPERM: operation not permitted, mkdir ...\.next\server\app\...` during build or prerendering.
-- **Root Cause:** Cloud synchronization clients (e.g., Microsoft OneDrive, Dropbox) or active antivirus scanners lock transient chunk files in `.next` while the Next.js compiler is generating static segments.
+</details>
+
+<details>
+<summary><b>Problem 1.3: Windows OneDrive / Background Process File Locking (<code>EPERM</code>)</b></summary>
+
+<br>
+
+- **Symptoms:** `Error: EPERM: operation not permitted, mkdir ...\.next\server\app\...` during build or static page generation.
+- **Root Cause:** Cloud synchronization clients (e.g. Microsoft OneDrive, Dropbox) or active antivirus scanners lock transient chunk files in `.next`.
 - **How to Diagnose:** Check if the repository resides within a OneDrive/cloud-synced folder path.
 - **Solution:** Pause cloud sync during builds or purge the stale cache:
   ```powershell
@@ -245,13 +513,19 @@ npm run build --prefix my-agent
   Remove-Item -Recurse -Force my-agent\.next -ErrorAction SilentlyContinue
   npm run build --prefix my-agent
   ```
-- **Verification:** Build proceeds through compilation and static page generation.
+- **Verification:** Build proceeds through compilation and static page generation cleanly.
+
+</details>
 
 ---
 
 ### Category 2: Environment & Credentials
 
-#### Problem 2.1: Missing or Empty `GEMINI_API_KEY`
+<details>
+<summary><b>Problem 2.1: Missing or Empty <code>GEMINI_API_KEY</code></b></summary>
+
+<br>
+
 - **Symptoms:** Chat API returns HTTP 500 with `GEMINI_API_KEY is not configured. Set GEMINI_API_KEY in your environment variables or .env file.`
 - **Root Cause:** The server runtime cannot locate `process.env.GEMINI_API_KEY`.
 - **How to Diagnose:** Verify that `my-agent/.env` exists and contains a non-empty `GEMINI_API_KEY` string.
@@ -261,46 +535,76 @@ npm run build --prefix my-agent
   ```
 - **Verification:** Refresh [http://localhost:3000](http://localhost:3000) and verify that the Header displays `ENGINE: ...` with a pulsing green indicator.
 
-#### Problem 2.2: Ethereum Address Accidental Paste in `WALLET_PRIVATE_KEY`
+</details>
+
+<details>
+<summary><b>Problem 2.2: Ethereum Address Accidental Paste in <code>WALLET_PRIVATE_KEY</code></b></summary>
+
+<br>
+
 - **Symptoms:** Wallet falls back to generated key or balance returns unexpected address.
 - **Root Cause:** Pasting a 42-character public address (`0x...`) instead of a 66-character (32-byte) hex private key. `wallet.ts` validates private keys with `/^0x[0-9a-fA-F]{64}$/`.
 - **How to Diagnose:** Inspect `WALLET_PRIVATE_KEY` in `my-agent/.env`. Count characters (an address is 42 chars; a private key is 66 chars including `0x`).
-- **Solution:** Provide a 32-byte private key or leave `WALLET_PRIVATE_KEY` blank and click **Create wallet** in the UI.
+- **Solution:** Provide a 32-byte private key or leave `WALLET_PRIVATE_KEY` blank and click <kbd>Create wallet</kbd> in the UI.
 - **Verification:** Run `npm test --prefix my-agent` to verify `parsePrivateKey` accepts valid hex keys.
+
+</details>
 
 ---
 
 ### Category 3: AI Model & Provider Errors
 
-#### Problem 3.1: Model Quota or Rate-Limit Exhaustion (HTTP 429 / 503)
+<details>
+<summary><b>Problem 3.1: Model Quota or Rate-Limit Exhaustion (HTTP 429 / 503)</b></summary>
+
+<br>
+
 - **Symptoms:** Chat returns `503 Service Unavailable` or `429 Too Many Requests`.
 - **Root Cause:** Free-tier Gemini quota limits reached on Google AI Studio.
 - **How to Diagnose:** Inspect terminal logs for `RESOURCE_EXHAUSTED` or `UNAVAILABLE`.
-- **Solution:** `agent/agent.ts` automatically retries 503 and 429 errors once after a 1500ms backoff. If persistent, switch to another model:
+- **Solution:** `agent/agent.ts` automatically retries 503 and 429 errors once after a 1500ms backoff. If persistent, switch to an alternative model:
   ```env
   GEMINI_MODEL=gemini-2.0-flash
   ```
 - **Verification:** Resend query after backoff window.
 
-#### Problem 3.2: Safety Filter Blocking
+</details>
+
+<details>
+<summary><b>Problem 3.2: Safety Filter Blocking</b></summary>
+
+<br>
+
 - **Symptoms:** Chat returns `The response was blocked by model safety filters (reason: SAFETY)`.
 - **Root Cause:** Google safety classifiers flagged prompt content or output candidates.
 - **How to Diagnose:** `agent/agent.ts` captures `promptFeedback.blockReason` and candidate `finishReason` (`SAFETY`, `BLOCKLIST`, `SPII`).
 - **Solution:** Rephrase the query to avoid sensitive trigger words. The agent loop handles this gracefully without throwing uncaught exceptions.
-- **Verification:** Prompt the agent with ordinary bazaar commerce queries (e.g., "Browse wares").
+- **Verification:** Prompt the agent with ordinary bazaar commerce queries (e.g. "Browse wares").
+
+</details>
 
 ---
 
-### Category 4: Tool Invocation Errors
+### Category 4: Tool Invocation & Dispatch Errors
 
-#### Problem 4.1: Missing Required Parameter on Tool Dispatch
+<details>
+<summary><b>Problem 4.1: Missing Required Parameter on Tool Dispatch</b></summary>
+
+<br>
+
 - **Symptoms:** Tool execution step returns `{ error: "Missing required parameter: itemId" }` or `{ error: "Missing required parameter: dealId" }`.
 - **Root Cause:** The AI model invoked a tool without supplying required parameters.
 - **How to Diagnose:** Inspect the tool call arguments in the chat UI inspector badge.
 - **Solution:** `agent/tools.ts` normalizes both camelCase and snake_case parameters (`itemId` and `item_id`, `dealId` and `deal_id`). Ensure prompt clearly identifies the target item.
 - **Verification:** Run `npm test --prefix my-agent` — aliases are tested in `supports snake_case and camelCase aliases`.
 
-#### Problem 4.2: Payment Authorization Denied by Buyer Confirmation Gate
+</details>
+
+<details>
+<summary><b>Problem 4.2: Payment Authorization Denied by Buyer Confirmation Gate</b></summary>
+
+<br>
+
 - **Symptoms:** Agent replies: `Payment authorization denied: Buyer indicated hesitation... Ask the buyer for explicit confirmation before proceeding to checkout.`
 - **Root Cause:** Buyer asked a question (e.g. "Can I pay?"), expressed hesitation ("wait, cancel"), named another item, or attempted same-turn checkout.
 - **How to Diagnose:** Inspect `lastUserMessage` in the turn context.
@@ -308,7 +612,13 @@ npm run build --prefix my-agent
   > *"Yes, proceed to checkout"* or *"Confirm purchase of the agreed deal."*
 - **Verification:** Verified across 13 dedicated gate tests in `bazaar.test.ts`.
 
-#### Problem 4.3: Model-Generated Null or Undefined Tool Arguments Payload
+</details>
+
+<details>
+<summary><b>Problem 4.3: Model-Generated Null or Undefined Tool Arguments Payload</b></summary>
+
+<br>
+
 - **Symptoms:** `TypeError: Cannot read properties of null (reading 'itemId')` or unhandled exceptions when model omits tool argument object.
 - **Root Cause:** Model or custom caller invoked tool handlers with `null` or omitted arguments payload.
 - **How to Diagnose:** Inspect tool execution telemetry step or check server crash logs.
@@ -316,11 +626,17 @@ npm run build --prefix my-agent
 - **Code-level Fix:** Implemented across `haggle_offer`, `pay_invoice`, `get_receipt`, `get_weather`, and `get_country_info` in `agent/tools.ts`.
 - **Verification:** Verified in automated test `handles null and undefined tool argument payloads gracefully across all tools without crashing` in `bazaar.test.ts`.
 
+</details>
+
 ---
 
 ### Category 5: Wallet & Filesystem Persistence Errors
 
-#### Problem 5.1: Read-Only Filesystem in Serverless (`EROFS`)
+<details>
+<summary><b>Problem 5.1: Read-Only Filesystem in Serverless (<code>EROFS</code>)</b></summary>
+
+<br>
+
 - **Symptoms:** Server logs show `Error: EROFS: read-only file system, open '.agent-wallet.json'`.
 - **Root Cause:** Serverless cloud environments (such as Vercel AWS Lambda runtimes) have read-only root directories.
 - **How to Diagnose:** Observe filesystem write errors during `/api/wallet` POST requests.
@@ -331,25 +647,43 @@ npm run build --prefix my-agent
 - **Code-level Fix:** Implemented in `createWallet()` and `loadAccount()` in `agent/wallet.ts`.
 - **Verification:** Calling `createWallet()` in an ephemeral or read-only directory succeeds without throwing.
 
+</details>
+
 ---
 
 ### Category 6: Payment & x402 Micropayment Errors
 
-#### Problem 6.1: HTTP 402 Challenge Parsing Failure
+<details>
+<summary><b>Problem 6.1: HTTP 402 Challenge Parsing Failure</b></summary>
+
+<br>
+
 - **Symptoms:** `API request failed: 402 Payment Required`.
 - **Root Cause:** Client did not sign the 402 payment challenge or wallet was uninitialized.
 - **How to Diagnose:** Check network response headers in browser DevTools or inspect `payAndFetch` logs.
-- **Solution:** Click **Create wallet** in the Setup panel. `payAndFetch` automatically catches HTTP 402, extracts price (`0.01 USDC`) and `payTo`, signs with Viem EIP-191, and resends request with `X-PAYMENT` base64 header.
+- **Solution:** Click <kbd>Create wallet</kbd> in the Setup panel. `payAndFetch` automatically catches HTTP 402, extracts price (`0.01 USDC`) and `payTo`, signs with Viem EIP-191, and resends request with `X-PAYMENT` base64 header.
 - **Verification:** Query "What's the weather in Mumbai?" and observe signed payment in execution telemetry.
 
-#### Problem 6.2: Concurrent Double-Payment Attempt
+</details>
+
+<details>
+<summary><b>Problem 6.2: Concurrent Double-Payment Attempt</b></summary>
+
+<br>
+
 - **Symptoms:** `A payment is already currently processing for deal "deal-xxxxxxxx"`.
 - **Root Cause:** Rapid consecutive clicks or multiple tool calls dispatched simultaneously for the same deal.
 - **How to Diagnose:** Inspect `deal.paymentState` in stall status.
 - **Solution:** `beginPayment()` locks the deal state to `processing`. Wait for initial payment completion or receipt return.
 - **Verification:** Tested in `locks deal during beginPayment to prevent concurrent double-payments` in `bazaar.test.ts`.
 
-#### Problem 6.3: Relative URL Resolution & Trailing Slash Pathing (`TypeError: Failed to parse URL`)
+</details>
+
+<details>
+<summary><b>Problem 6.3: Relative URL Resolution &amp; Trailing Slash Pathing (<code>TypeError: Failed to parse URL</code>)</b></summary>
+
+<br>
+
 - **Symptoms:** Server-side tool execution throws `TypeError: Failed to parse URL from /api/...` or creates double-slash resource paths (e.g. `//api/bazaar/checkout`).
 - **Root Cause:** Unlike browser `window.fetch`, Node.js global `fetch` strictly requires absolute URLs with a valid protocol. Additionally, unstripped trailing slashes on `baseUrl` produced malformed double slashes.
 - **How to Diagnose:** Inspect server logs for `Failed to parse URL` when executing `pay_invoice` or `get_weather`.
@@ -357,11 +691,17 @@ npm run build --prefix my-agent
 - **Code-level Fix:** Implemented in `payAndFetch` (`agent/wallet.ts`) and `pay_invoice` / `get_weather` (`agent/tools.ts`).
 - **Verification:** Verified in automated test `strips trailing slashes from baseUrl and handles get_weather connection failures safely` in `bazaar.test.ts`.
 
+</details>
+
 ---
 
 ### Category 7: Application & Deployment Errors
 
-#### Problem 7.1: Port 3000 Collision
+<details>
+<summary><b>Problem 7.1: Port 3000 Collision</b></summary>
+
+<br>
+
 - **Symptoms:** `Error: listen EADDRINUSE: address already in use :::3000`.
 - **Root Cause:** Another instance of Next.js or a different background process is holding port 3000.
 - **How to Diagnose:** Run `netstat -ano | findstr 3000` (Windows) or `lsof -i :3000` (macOS/Linux).
@@ -371,18 +711,30 @@ npm run build --prefix my-agent
   ```
 - **Verification:** Open [http://localhost:3001](http://localhost:3001).
 
-#### Problem 7.2: Vercel Deployment Incorrect Root Directory
+</details>
+
+<details>
+<summary><b>Problem 7.2: Vercel Deployment Incorrect Root Directory</b></summary>
+
+<br>
+
 - **Symptoms:** Vercel build fails with `No Next.js version could be detected in the root directory`.
 - **Root Cause:** Next.js application core lives in `my-agent/`, not the root directory.
-- **How to Diagnose:** Inspect Vercel Project Settings -> General -> Root Directory.
+- **How to Diagnose:** Inspect Vercel Project Settings ➔ General ➔ Root Directory.
 - **Solution:** Set Vercel Root Directory to **`my-agent`**.
 - **Verification:** Vercel deployment logs show `▲ Next.js 16.4.0` compilation.
+
+</details>
 
 ---
 
 ### Category 8: Security & Operational Rules
 
-#### Problem 8.1: Accidental Git Commit of Private Key or Credentials
+<details>
+<summary><b>Problem 8.1: Accidental Git Commit of Private Key or Credentials</b></summary>
+
+<br>
+
 - **Symptoms:** Git detects modified `.env` or `.agent-wallet.json`.
 - **Root Cause:** Missing or misconfigured `.gitignore` entries.
 - **How to Diagnose:** Run `git status` to check untracked/staged files.
@@ -390,15 +742,17 @@ npm run build --prefix my-agent
 - **Prevention:** Never run `git add -A` or remove `.gitignore` exclusions.
 - **Verification:** Run `git status` and verify secrets remain untracked.
 
+</details>
+
 ---
 
-## Architecture & Codebase Map
+## 🗺️ Architecture & Codebase Map
 
 ```text
 agentmaxx/
 ├── package.json                   # Root scripts proxying dev/build/test to my-agent
 ├── DEPLOYMENT.md                  # Comprehensive Vercel & serverless deployment guide
-├── README.md                      # Authoritative architecture, tools & troubleshooting guide
+├── README.md                      # Theatrical interactive architecture, tools & troubleshooting portal
 └── my-agent/                      # Next.js 16 Application Root
     ├── agent/
     │   ├── agent.ts               # Core Gemini multi-step reasoning loop & safety handler
@@ -415,7 +769,7 @@ agentmaxx/
     │   └── page.tsx               # Reactive command center UI
     ├── components/
     │   ├── chat/                  # Chat console, message bubbles & execution badges
-    │   ├── command-palette.tsx    # Modal keyboard command center
+    │   ├── command-palette.tsx    # Modal keyboard command center (⌘K / Ctrl+K)
     │   ├── header.tsx             # Live telemetry strip (Engine, Base Sepolia, Wallet)
     │   ├── hero.tsx               # Protocol status ribbon
     │   ├── setup-panel.tsx        # Guided prerequisite checklist & wallet creation
@@ -433,6 +787,6 @@ agentmaxx/
 
 ---
 
-## License
+## 📜 License
 
-MIT License. See [LICENSE](./my-agent/LICENSE).
+Distributed under the **MIT License**. See [LICENSE](./my-agent/LICENSE) for terms.
