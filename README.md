@@ -201,7 +201,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. Click **Cre
 
 ### 5. Running the Automated Test Suite
 ```bash
-# Run the 48-test verification suite
+# Run the 50-test verification suite
 npm test --prefix my-agent
 
 # Run strict TypeScript type check
@@ -308,6 +308,14 @@ npm run build --prefix my-agent
   > *"Yes, proceed to checkout"* or *"Confirm purchase of the agreed deal."*
 - **Verification:** Verified across 13 dedicated gate tests in `bazaar.test.ts`.
 
+#### Problem 4.3: Model-Generated Null or Undefined Tool Arguments Payload
+- **Symptoms:** `TypeError: Cannot read properties of null (reading 'itemId')` or unhandled exceptions when model omits tool argument object.
+- **Root Cause:** Model or custom caller invoked tool handlers with `null` or omitted arguments payload.
+- **How to Diagnose:** Inspect tool execution telemetry step or check server crash logs.
+- **Solution:** Tool handlers in `agent/tools.ts` guard inputs defensively with `safeArgs = (args && typeof args === "object" ? args : {})`.
+- **Code-level Fix:** Implemented across `haggle_offer`, `pay_invoice`, `get_receipt`, `get_weather`, and `get_country_info` in `agent/tools.ts`.
+- **Verification:** Verified in automated test `handles null and undefined tool argument payloads gracefully across all tools without crashing` in `bazaar.test.ts`.
+
 ---
 
 ### Category 5: Wallet & Filesystem Persistence Errors
@@ -340,6 +348,14 @@ npm run build --prefix my-agent
 - **How to Diagnose:** Inspect `deal.paymentState` in stall status.
 - **Solution:** `beginPayment()` locks the deal state to `processing`. Wait for initial payment completion or receipt return.
 - **Verification:** Tested in `locks deal during beginPayment to prevent concurrent double-payments` in `bazaar.test.ts`.
+
+#### Problem 6.3: Relative URL Resolution & Trailing Slash Pathing (`TypeError: Failed to parse URL`)
+- **Symptoms:** Server-side tool execution throws `TypeError: Failed to parse URL from /api/...` or creates double-slash resource paths (e.g. `//api/bazaar/checkout`).
+- **Root Cause:** Unlike browser `window.fetch`, Node.js global `fetch` strictly requires absolute URLs with a valid protocol. Additionally, unstripped trailing slashes on `baseUrl` produced malformed double slashes.
+- **How to Diagnose:** Inspect server logs for `Failed to parse URL` when executing `pay_invoice` or `get_weather`.
+- **Solution:** `payAndFetch` in `agent/wallet.ts` normalizes target URLs with `new URL(url, defaultBase)` (`http://localhost:3000`) before invoking `fetch(resolvedUrl)`, and sanitizes duplicate leading slashes in `resource`. Tool callers strip trailing slashes (`cleanBase = rawBase.replace(/\/+$/, "")`).
+- **Code-level Fix:** Implemented in `payAndFetch` (`agent/wallet.ts`) and `pay_invoice` / `get_weather` (`agent/tools.ts`).
+- **Verification:** Verified in automated test `strips trailing slashes from baseUrl and handles get_weather connection failures safely` in `bazaar.test.ts`.
 
 ---
 
@@ -408,7 +424,7 @@ agentmaxx/
     ├── public/
     │   └── risein-logo.svg        # Verified SVG branding asset
     ├── tests/
-    │   └── bazaar.test.ts         # 48-test comprehensive verification test suite
+    │   └── bazaar.test.ts         # 50-test comprehensive verification test suite
     ├── .env.example               # Safe environment variable configuration template
     ├── next.config.ts             # Next.js configuration (Webpack, optimization)
     ├── package.json               # Dependencies and test/build scripts
