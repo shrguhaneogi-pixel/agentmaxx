@@ -113,16 +113,16 @@ export function ToolsPanel({ tools, onSelectPrompt }: ToolsPanelProps) {
   });
 
   return (
-    <Card className="border border-border/80 bg-card/90 shadow-lg">
-      <CardHeader className="border-b border-border/40 pb-4">
+    <Card className="bazaar-border border border-border/80 bg-card/95 shadow-xl">
+      <CardHeader className="border-b border-border/40 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-bold text-primary">02</span>
-            <span className="font-mono text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-              // TOOL REGISTRY
+            <span className="font-mono text-xs font-bold text-brass">02</span>
+            <span className="font-serif text-xs font-semibold tracking-wider text-parchment uppercase">
+              MERCHANT TOOL REGISTRY
             </span>
           </div>
-          <span className="font-mono text-[10px] text-muted-foreground uppercase">
+          <span className="font-mono text-[10px] text-brass px-1.5 py-0.5 border border-brass/30 bg-brass/10">
             {tools.length} CAPABILITIES
           </span>
         </div>

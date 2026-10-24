@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { SendHorizontal, Terminal, Sparkles } from "lucide-react";
+import { SendHorizontal, Compass, Sparkles, Coins, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,9 +15,9 @@ interface ComposerProps {
 }
 
 const QUICK_ACTIONS = [
-  { label: "List Wares", prompt: "Show me what wares you have for sale in the bazaar." },
-  { label: "Check Wallet", prompt: "What's in your wallet?" },
-  { label: "Stall Status", prompt: "What is the current mood and status of Marzban's bazaar stall?" },
+  { label: "View Stall Wares", prompt: "Show me what wares you have for sale in the bazaar." },
+  { label: "Coin Pouch Balance", prompt: "What's in your wallet?" },
+  { label: "Stall Mood Status", prompt: "What is the current mood and status of Marzban's bazaar stall?" },
 ];
 
 export function Composer({
@@ -48,7 +48,7 @@ export function Composer({
       {/* Quick Action Chips */}
       <div className="flex flex-wrap items-center gap-1.5 px-1 font-mono text-[10px]">
         <span className="text-muted-foreground uppercase flex items-center gap-1">
-          <Sparkles className="size-2.5 text-primary" /> QUICK:
+          <Sparkles className="size-2.5 text-brass" /> QUICK:
         </span>
         {QUICK_ACTIONS.map((action) => (
           <button
@@ -56,26 +56,26 @@ export function Composer({
             type="button"
             onClick={() => onSubmit(action.prompt)}
             disabled={!ready || thinking}
-            className="border border-border/60 bg-muted/30 px-2 py-0.5 text-muted-foreground hover:text-foreground hover:border-primary/50 transition-colors disabled:opacity-50 cursor-pointer uppercase"
+            className="border border-border/60 bg-card px-2 py-0.5 text-muted-foreground hover:text-parchment hover:border-brass/50 transition-colors disabled:opacity-50 cursor-pointer uppercase"
           >
             {action.label}
           </button>
         ))}
       </div>
 
-      {/* Main Terminal Composer Bar */}
+      {/* Main Bazaar Composer Bar */}
       <form onSubmit={handleSubmit} className="flex items-center gap-2">
         <div
           className={cn(
-            "flex flex-1 items-center border bg-background/80 transition-colors focus-within:border-primary focus-within:shadow-[0_0_15px_rgba(211,246,90,0.15)]",
+            "flex flex-1 items-center border bg-card/90 transition-colors focus-within:border-brass focus-within:shadow-[0_0_15px_rgba(197,160,89,0.25)]",
             !ready && "opacity-50 border-border/40",
             ready && "border-border/80"
           )}
         >
-          {/* Shell Prompt Prefix */}
+          {/* Bazaar Prompt Prefix */}
           <div className="flex items-center pl-3 pr-1 text-muted-foreground font-mono text-xs select-none">
-            <span className="text-primary font-bold">~/agent</span>
-            <span className="ml-1 text-muted-foreground/80">$</span>
+            <span className="text-brass font-bold">marzban/stall</span>
+            <span className="ml-1 text-brass/70">❯</span>
           </div>
 
           <input
@@ -90,12 +90,12 @@ export function Composer({
             }}
             placeholder={
               ready
-                ? "Enter command, haggle offer, or directive..."
-                : "Configure Gemini API key to activate prompt..."
+                ? "Enter trade offer (e.g. 'I offer 75 silver for the Brass Astrolabe') or ask Marzban..."
+                : "Configure Gemini API key to activate trade prompt..."
             }
             disabled={!ready}
-            className="h-11 w-full bg-transparent px-2.5 font-mono text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed"
-            aria-label="Agent directive prompt"
+            className="h-11 w-full bg-transparent px-2.5 font-mono text-xs sm:text-sm text-parchment placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed"
+            aria-label="Merchant trade prompt"
           />
 
           <span className="hidden sm:inline-block pr-3 font-mono text-[10px] text-muted-foreground/60">
@@ -107,8 +107,8 @@ export function Composer({
         <Button
           type="submit"
           disabled={!ready || thinking || !input.trim()}
-          className="h-11 px-5 font-mono text-xs font-bold uppercase tracking-wider bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
-          aria-label="Send directive"
+          className="h-11 px-5 font-mono text-xs font-bold uppercase tracking-wider bg-brass text-background hover:bg-brass-light disabled:opacity-40"
+          aria-label="Send trade directive"
         >
           <SendHorizontal className="size-4" />
         </Button>

@@ -2,12 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import {
-  Bot,
+  Compass,
   CircleAlert,
   RotateCcw,
   Sparkles,
   Terminal,
   User,
+  ShoppingBag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import { BazaarStatusBanner, Mood } from "@/components/chat/bazaar-status-banner
 import { EmptyState } from "@/components/chat/empty-state";
 import { Composer } from "@/components/chat/composer";
 import { CommandPalette } from "@/components/command-palette";
+import { BazaarInventory } from "@/components/bazaar-inventory";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -47,6 +49,7 @@ export default function Home() {
   const [creating, setCreating] = useState(false);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [bazaarMood, setBazaarMood] = useState<Mood>("neutral");
+  const [stallRefresh, setStallRefresh] = useState<number>(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
@@ -152,7 +155,7 @@ export default function Home() {
           ...m,
           data.error
             ? { role: "agent", text: data.error, error: true, timestamp: agentTimestamp }
-            : { role: "agent", text: data.answer || "Directive execution complete with no output.", steps: data.steps, timestamp: agentTimestamp },
+            : { role: "agent", text: data.answer || "Trade evaluation complete.", steps: data.steps, timestamp: agentTimestamp },
         ]);
 
         // Inspect tool results to update live UI states (e.g. bazaar mood or wallet balances)
@@ -166,6 +169,8 @@ export default function Home() {
               loadWallet();
             }
           }
+          // Refresh wares inventory to reflect new rounds, status, or reservations
+          setStallRefresh((c) => c + 1);
         }
       } catch (err: unknown) {
         const messageText =
@@ -193,8 +198,8 @@ export default function Home() {
   const totalToolCalls = messages.reduce((acc, m) => acc + (m.steps?.length || 0), 0);
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[1560px] flex-col gap-8 px-4 py-6 md:px-10 md:py-10">
-      {/* Precision Header */}
+    <main className="mx-auto flex min-h-screen max-w-[1560px] flex-col gap-6 px-4 py-6 md:px-10 md:py-8">
+      {/* Precision Bazaar Header */}
       <Header
         model={status?.model}
         hasApiKey={ready}
@@ -202,15 +207,22 @@ export default function Home() {
         onOpenCommandPalette={() => setCommandPaletteOpen(true)}
       />
 
-      {/* Hero Mission Anchor */}
+      {/* Hero Atmosphere Anchor */}
       <Hero
         ready={ready}
         walletCreated={Boolean(wallet?.address)}
         toolsCount={status?.tools?.length || 0}
       />
 
+      {/* Interactive Visual Wares Inventory */}
+      <BazaarInventory
+        onSelectPrompt={send}
+        disabled={!ready || thinking}
+        refreshTrigger={stallRefresh}
+      />
+
       {/* Two-Column Command Layout */}
-      <div className="grid flex-1 gap-6 lg:grid-cols-[400px_1fr] items-start">
+      <div className="grid flex-1 gap-6 lg:grid-cols-[380px_1fr] items-start">
         {/* Left Column: Setup & Capabilities Sidebar */}
         <aside className="flex flex-col gap-6">
           <SetupPanel
@@ -231,21 +243,21 @@ export default function Home() {
           />
         </aside>
 
-        {/* Right Column: Autonomous Agent Command Workspace */}
-        <Card className="flex h-[600px] lg:h-[calc(100vh-5rem)] min-h-[500px] flex-col border border-border/80 bg-card/90 shadow-2xl lg:sticky lg:top-6 overflow-hidden">
+        {/* Right Column: Marzban Merchant Reasoning Workspace */}
+        <Card className="bazaar-border flex h-[620px] lg:h-[calc(100vh-8rem)] min-h-[520px] flex-col border border-border/80 bg-card/95 shadow-2xl lg:sticky lg:top-6 overflow-hidden">
           {/* Workspace Header with Telemetry & Actions */}
-          <CardHeader className="border-b border-border/50 py-3.5 px-4 bg-background/60">
+          <CardHeader className="border-b border-border/50 py-3 px-4 bg-background/80">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs font-bold text-primary">03</span>
-                <span className="font-mono text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                  // REASONING WORKSPACE
+                <span className="font-mono text-xs font-bold text-brass">03</span>
+                <span className="font-serif text-xs font-semibold tracking-wider text-parchment uppercase">
+                  MERCHANT REASONING WORKSPACE
                 </span>
-                <Badge variant="outline" className="ml-2 font-mono text-[10px] uppercase text-muted-foreground">
+                <Badge variant="outline" className="ml-2 font-mono text-[10px] uppercase text-muted-foreground border-border/60">
                   {messages.length} EVENTS
                 </Badge>
                 {totalToolCalls > 0 && (
-                  <Badge variant="outline" className="font-mono text-[10px] uppercase text-cyan border-cyan/40 bg-cyan/10">
+                  <Badge variant="outline" className="font-mono text-[10px] uppercase text-brass border-brass/40 bg-brass/10">
                     {totalToolCalls} TOOLS DISPATCHED
                   </Badge>
                 )}
@@ -257,7 +269,7 @@ export default function Home() {
                   size="sm"
                   onClick={() => setMessages([])}
                   disabled={messages.length === 0 || thinking}
-                  className="font-mono text-xs text-muted-foreground hover:text-foreground uppercase h-7 px-2"
+                  className="font-mono text-xs text-muted-foreground hover:text-parchment uppercase h-7 px-2"
                   aria-label="Clear session history"
                 >
                   <RotateCcw className="size-3 mr-1.5" /> Clear
@@ -290,26 +302,28 @@ export default function Home() {
                     /* User Directive Bubble */
                     <div className="max-w-[85%] self-end flex flex-col items-end gap-1">
                       <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground uppercase">
-                        <span>OPERATOR DIRECTIVE</span>
+                        <span>BUYER OFFER / DIRECTIVE</span>
                         {m.timestamp && <span>{m.timestamp}</span>}
-                        <User className="size-3 text-primary" />
+                        <User className="size-3 text-brass" />
                       </div>
-                      <div className="border border-primary/50 bg-primary/10 px-4 py-2.5 font-mono text-sm text-foreground shadow-sm">
-                        <span className="text-primary font-bold mr-2">&gt;</span>
+                      <div className="border border-brass/50 bg-brass/10 px-4 py-2.5 font-mono text-sm text-parchment shadow-sm">
+                        <span className="text-brass font-bold mr-2">&gt;</span>
                         {m.text}
                       </div>
                     </div>
                   ) : (
-                    /* Agent Response Container */
-                    <div className="flex max-w-[92%] gap-3 self-start items-start">
-                      <div className="flex size-8 shrink-0 items-center justify-center border border-border/80 bg-background text-primary mt-1 shadow-sm">
-                        <Bot className="size-4.5" />
+                    /* Marzban Merchant Response Container */
+                    <div className="flex max-w-[94%] gap-3 self-start items-start">
+                      <div className="flex size-9 shrink-0 items-center justify-center border border-brass/50 bg-crimson/50 text-brass mt-1 shadow-md">
+                        <Compass className="size-5" />
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
                         {/* Agent Metadata Header */}
                         <div className="flex items-center gap-2 font-mono text-[10px] text-muted-foreground uppercase">
-                          <span className="font-bold text-foreground">AGENTMAXX // GEMINI</span>
+                          <span className="font-serif font-bold text-parchment tracking-wide">
+                            MARZBAN // BAZAAR MERCHANT
+                          </span>
                           {m.timestamp && <span>• {m.timestamp}</span>}
                         </div>
 
@@ -322,18 +336,18 @@ export default function Home() {
                           </div>
                         )}
 
-                        {/* Agent Narrative Text Body */}
+                        {/* Merchant Dialogue Parchment Card */}
                         <div
                           className={cn(
-                            "border px-4 py-3 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans",
+                            "border px-4 py-3 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans transition-all",
                             m.error
                               ? "border-destructive/40 bg-destructive/10 text-destructive font-mono"
-                              : "border-border/60 bg-muted/30 text-foreground"
+                              : "border-brass/30 bg-card/80 text-parchment shadow-sm"
                           )}
                         >
                           {m.error && (
                             <div className="flex items-center gap-1.5 font-bold mb-1 uppercase tracking-wider text-xs">
-                              <CircleAlert className="size-3.5" /> Directive Execution Error
+                              <CircleAlert className="size-3.5" /> Trade Negotiation Error
                             </div>
                           )}
                           {m.text}
@@ -346,14 +360,14 @@ export default function Home() {
 
               {/* Reasoning Telemetry Indicator */}
               {thinking && (
-                <div className="flex items-center gap-3 font-mono text-xs text-primary bg-primary/5 border border-primary/30 p-3 self-start animate-pulse">
-                  <Terminal className="size-4 animate-spin" />
+                <div className="flex items-center gap-3 font-mono text-xs text-brass bg-brass/5 border border-brass/30 p-3 self-start animate-pulse">
+                  <Compass className="size-4 animate-spin text-brass" />
                   <div className="flex flex-col">
-                    <span className="font-bold uppercase tracking-wider">
-                      AGENT REASONING // DISPATCHING TOOLS...
+                    <span className="font-bold uppercase tracking-wider font-serif">
+                      MARZBAN IS EVALUATING THE OFFER // REASONING...
                     </span>
                     <span className="text-[10px] text-muted-foreground">
-                      Executing multi-step Gemini tool loop and evaluating state transitions
+                      Assessing stall mood, private threshold formula, and state transitions
                     </span>
                   </div>
                 </div>
@@ -363,8 +377,8 @@ export default function Home() {
             </div>
           </ScrollArea>
 
-          {/* Interactive Shell Composer */}
-          <CardFooter className="border-t border-border/50 bg-background/90 p-4">
+          {/* Interactive Bazaar Shell Composer */}
+          <CardFooter className="border-t border-border/50 bg-background/95 p-4">
             <div className="w-full">
               <Composer
                 input={input}
