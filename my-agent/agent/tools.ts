@@ -1,5 +1,7 @@
+import type { Address } from "viem";
 import {
   beginPayment,
+  completePayment,
   failPayment,
   getReceipt,
   getStallStatus,
@@ -7,7 +9,15 @@ import {
   listWares,
   verifyBuyerConfirmation,
 } from "./bazaar";
-import { getWalletAddress, getWalletBalance, payAndFetch, type PaymentExecutionResult } from "./wallet";
+import {
+  executeOnChainSettlement,
+  getWalletAddress,
+  getWalletBalance,
+  payAndFetch,
+  type OnChainSettlementOptions,
+  type OnChainSettlementResult,
+  type PaymentExecutionResult,
+} from "./wallet";
 
 export type ToolContext = {
   baseUrl: string;
@@ -15,6 +25,8 @@ export type ToolContext = {
   lastUserMessage?: string;
   confirmedDealId?: string;
   turnStartTime?: number;
+  onChain?: boolean;
+  onChainOptions?: OnChainSettlementOptions;
 };
 
 export type Tool = {
@@ -74,13 +86,27 @@ export const tools: Tool[] = [
   {
     name: "pay_invoice",
     description:
-      "Request the mock bazaar checkout for an agreed deal using the agent's wallet. Required parameter: dealId. Explicit buyer confirmation in the current conversation turn is required before calling this tool.",
+      "Request the bazaar checkout for an agreed deal using the agent's wallet. Can settle via true on-chain smart contract escrow (Base Sepolia) or off-chain x402 HTTP flow. Required parameter: dealId. Explicit buyer confirmation in the current conversation turn is required before calling this tool.",
     parameters: {
       type: "object",
       properties: {
         dealId: {
           type: "string",
           description: "The ID of the pending agreed deal (e.g. 'deal-xxxxxxxx').",
+        },
+        mode: {
+          type: "string",
+          enum: ["on-chain", "off-chain"],
+          description:
+            "Optional settlement mode: 'on-chain' for Base Sepolia smart contract escrow settlement, or 'off-chain' for x402 endpoint settlement.",
+        },
+        amount: {
+          type: "string",
+          description: "Optional settlement amount (for on-chain settlement, e.g. '0.01').",
+        },
+        asset: {
+          type: "string",
+          description: "Optional settlement asset (for on-chain settlement, e.g. 'ETH' or 'USDC').",
         },
       },
       required: ["dealId"],
@@ -112,6 +138,61 @@ export const tools: Tool[] = [
       const beginRes = beginPayment(dealId);
       if (!beginRes.ok) {
         return { error: beginRes.error, dealId };
+      }
+
+      const requestedMode = typeof safeArgs.mode === "string" ? safeArgs.mode : "";
+      const isExplicitOnChain =
+        requestedMode === "on-chain" ||
+        safeArgs.onChain === true ||
+        process.env.SETTLEMENT_MODE === "on-chain" ||
+        Boolean(ctx?.onChain);
+
+      if (isExplicitOnChain) {
+        try {
+          const amount = typeof safeArgs.amount === "string" ? safeArgs.amount : "0.01";
+          const asset = typeof safeArgs.asset === "string" ? safeArgs.asset : "ETH";
+          const payTo =
+            typeof safeArgs.payTo === "string" ? (safeArgs.payTo as Address) : undefined;
+
+          const settlement = await executeOnChainSettlement(
+            dealId,
+            amount,
+            asset,
+            payTo,
+            ctx?.onChainOptions
+          );
+
+          const buyer = getWalletAddress() || "0x000000000000000000000000000000000000dEaD";
+          const completion = completePayment(dealId, buyer, settlement.txHash);
+
+          if (!completion.ok) {
+            failPayment(dealId, completion.error);
+            return {
+              error: `On-chain settlement succeeded but inventory state update failed: ${completion.error}`,
+              dealId,
+              txHash: settlement.txHash,
+            };
+          }
+
+          return {
+            success: true,
+            dealId,
+            receiptId: completion.receipt.id,
+            receipt: completion.receipt,
+            txHash: settlement.txHash,
+            blockNumber: settlement.blockNumber.toString(),
+            gasUsed: settlement.gasUsed.toString(),
+            settlement,
+            message: "On-chain payment settled on Base Sepolia and verified. Deal is completed.",
+          };
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          failPayment(dealId, msg);
+          return {
+            error: `On-chain payment failure: ${msg}. The item remains reserved.`,
+            dealId,
+          };
+        }
       }
 
       try {

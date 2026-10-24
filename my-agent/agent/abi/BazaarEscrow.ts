@@ -190,7 +190,6 @@ export const BazaarEscrowABI = [
       {
         internalType: "address",
         name: "account",
-        "name": "account",
         type: "address",
       },
       {

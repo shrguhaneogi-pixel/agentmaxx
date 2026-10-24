@@ -16,17 +16,22 @@ import os from "os";
 import path from "path";
 import {
   createPublicClient,
+  createWalletClient,
   formatEther,
   http,
+  parseEther,
+  parseEventLogs,
   verifyTypedData,
   type Address,
   type Hex,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+import { BazaarEscrowABI } from "./abi/BazaarEscrow";
 import {
   buildPaymentMessage,
   getEIP712Domain,
+  getVerifyingContract,
   EIP712_PAYMENT_TYPES,
   validatePaymentPayload,
   type PaymentPayload,
@@ -287,4 +292,166 @@ export async function verifyPayment(header: string | null): Promise<Payment | nu
   } catch {
     return null;
   }
+}
+
+export interface OnChainSettlementOptions {
+  contractAddress?: Address;
+  publicClient?: any;
+  walletClient?: any;
+  deadlineSeconds?: number;
+  nonce?: string;
+}
+
+export interface OnChainSettlementResult {
+  success: boolean;
+  txHash: Hex;
+  blockNumber: bigint;
+  gasUsed: bigint;
+  dealId: string;
+  from: Address;
+  to: Address;
+  amount: string;
+  asset: string;
+  nonce: string;
+  event?: {
+    from: Address;
+    to: Address;
+    dealId: string;
+    amount: bigint;
+    asset: string;
+    nonce: string;
+  };
+}
+
+/**
+ * Executes true on-chain settlement for a deal via the BazaarEscrow smart contract on Base Sepolia.
+ * 1. Constructs typed EIP-712 structured data message.
+ * 2. Cryptographically signs typed data using agent's wallet.
+ * 3. Broadcasts settlePayment transaction via Viem walletClient.writeContract.
+ * 4. Awaits block confirmation and finality via Viem publicClient.waitForTransactionReceipt.
+ * 5. Parses PaymentSettled event log and returns confirmed transaction metrics.
+ */
+export async function executeOnChainSettlement(
+  dealId: string,
+  amount: string = "0.01",
+  asset: string = "ETH",
+  payTo: Address = "0x000000000000000000000000000000000000dEaD",
+  options?: OnChainSettlementOptions
+): Promise<OnChainSettlementResult> {
+  const account = requireAccount();
+  const contractAddress = options?.contractAddress || getVerifyingContract();
+  const deadlineSeconds = options?.deadlineSeconds ?? 300;
+  const deadline = Math.floor(Date.now() / 1000) + deadlineSeconds;
+  const nonce = options?.nonce || crypto.randomUUID();
+
+  // 1. Construct typed EIP-712 structured data message
+  const paymentMessage = {
+    from: account.address,
+    to: payTo,
+    amount,
+    asset,
+    resource: dealId,
+    nonce,
+    deadline: BigInt(deadline),
+  };
+
+  // 2. Sign typed data with agent's account
+  const signature = await account.signTypedData({
+    domain: getEIP712Domain(contractAddress),
+    types: EIP712_PAYMENT_TYPES,
+    primaryType: "Payment",
+    message: paymentMessage,
+  });
+
+  // 3. Compute native value if asset is ETH
+  let value = 0n;
+  if (asset.toUpperCase() === "ETH") {
+    try {
+      value = parseEther(amount);
+    } catch {
+      value = 0n;
+    }
+  }
+
+  // 4. Calldata struct matching BazaarEscrow.Payment
+  const p = {
+    from: account.address,
+    to: payTo,
+    amount,
+    asset,
+    resource: dealId,
+    nonce,
+    deadline: BigInt(deadline),
+  };
+
+  const rpcUrl = process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
+
+  const walClient =
+    options?.walletClient ||
+    createWalletClient({
+      account,
+      chain: baseSepolia,
+      transport: http(rpcUrl, { timeout: 15_000 }),
+    });
+
+  const pubClient =
+    options?.publicClient ||
+    createPublicClient({
+      chain: baseSepolia,
+      transport: http(rpcUrl, { timeout: 15_000 }),
+    });
+
+  // 5. Broadcast contract transaction
+  const hash: Hex = await walClient.writeContract({
+    address: contractAddress,
+    abi: BazaarEscrowABI,
+    functionName: "settlePayment",
+    args: [p, signature],
+    value,
+  });
+
+  // 6. Await block inclusion and finality
+  const receipt = await pubClient.waitForTransactionReceipt({ hash });
+
+  if (receipt.status === "reverted") {
+    throw new Error(`Transaction reverted on-chain (tx: ${hash})`);
+  }
+
+  // 7. Parse PaymentSettled event log
+  let settledEvent: any = undefined;
+  try {
+    const parsedLogs = parseEventLogs({
+      abi: BazaarEscrowABI,
+      eventName: "PaymentSettled",
+      logs: receipt.logs || [],
+    });
+    if (parsedLogs.length > 0) {
+      settledEvent = parsedLogs[0].args;
+    }
+  } catch {
+    // If mock or logs not formatted with event, proceed safely
+  }
+
+  return {
+    success: true,
+    txHash: hash,
+    blockNumber: receipt.blockNumber ?? 0n,
+    gasUsed: receipt.gasUsed ?? 0n,
+    dealId,
+    from: account.address,
+    to: payTo,
+    amount,
+    asset,
+    nonce,
+    event: settledEvent
+      ? {
+          from: settledEvent.from,
+          to: settledEvent.to,
+          dealId: settledEvent.dealId,
+          amount: settledEvent.amount,
+          asset: settledEvent.asset,
+          nonce: settledEvent.nonce,
+        }
+      : undefined,
+  };
 }

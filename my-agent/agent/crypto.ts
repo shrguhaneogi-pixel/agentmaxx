@@ -13,7 +13,9 @@ export const DEFAULT_VERIFYING_CONTRACT: Address = "0x00000000000000000000000000
 
 /** Resolves verifying contract address: allows override via environment, defaults to placeholder. */
 export function getVerifyingContract(): Address {
-  const custom = process.env.PAYMENT_VERIFYING_CONTRACT?.trim();
+  const custom =
+    process.env.PAYMENT_VERIFYING_CONTRACT?.trim() ||
+    process.env.NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS?.trim();
   if (custom && /^0x[0-9a-fA-F]{40}$/.test(custom)) {
     return custom as Address;
   }
@@ -21,7 +23,7 @@ export function getVerifyingContract(): Address {
 }
 
 /** Reconstructs the canonical EIP-712 domain for Base Sepolia. */
-export function getEIP712Domain(): {
+export function getEIP712Domain(verifyingContractOverride?: Address): {
   name: string;
   version: string;
   chainId: number;
@@ -31,7 +33,7 @@ export function getEIP712Domain(): {
     name: EIP712_DOMAIN_NAME,
     version: EIP712_DOMAIN_VERSION,
     chainId: BASE_SEPOLIA_CHAIN_ID,
-    verifyingContract: getVerifyingContract(),
+    verifyingContract: verifyingContractOverride || getVerifyingContract(),
   };
 }
 
