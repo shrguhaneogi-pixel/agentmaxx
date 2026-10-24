@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/chat/empty-state";
 import { Composer } from "@/components/chat/composer";
 import { CommandPalette } from "@/components/command-palette";
 import { BazaarInventory } from "@/components/bazaar-inventory";
+import { BazaarSplineEnvironment } from "@/components/bazaar-spline-environment";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -244,9 +245,12 @@ export default function Home() {
         </aside>
 
         {/* Right Column: Marzban Merchant Reasoning Workspace */}
-        <Card className="bazaar-border flex h-[620px] lg:h-[calc(100vh-8rem)] min-h-[520px] flex-col border border-border/80 bg-card/95 shadow-2xl lg:sticky lg:top-6 overflow-hidden">
+        <Card className="bazaar-border flex h-[620px] lg:h-[calc(100vh-8rem)] min-h-[520px] flex-col border border-border/80 bg-card/95 shadow-2xl lg:sticky lg:top-6 overflow-hidden relative">
+          {/* 3D / Procedural Environmental Backdrop */}
+          <BazaarSplineEnvironment />
+
           {/* Workspace Header with Telemetry & Actions */}
-          <CardHeader className="border-b border-border/50 py-3 px-4 bg-background/80">
+          <CardHeader className="relative z-10 border-b border-border/50 py-3 px-4 bg-background/80">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs font-bold text-brass">03</span>
@@ -279,14 +283,16 @@ export default function Home() {
           </CardHeader>
 
           {/* Marzban's Bazaar Status Banner */}
-          <BazaarStatusBanner
-            mood={bazaarMood}
-            onSendPrompt={send}
-            disabled={!ready || thinking}
-          />
+          <div className="relative z-10">
+            <BazaarStatusBanner
+              mood={bazaarMood}
+              onSendPrompt={send}
+              disabled={!ready || thinking}
+            />
+          </div>
 
           {/* Scrollable Conversation Feed */}
-          <ScrollArea className="min-h-0 flex-1 px-4 py-4">
+          <ScrollArea className="relative z-10 min-h-0 flex-1 px-4 py-4">
             <div className="flex flex-col gap-5">
               {messages.length === 0 && (
                 <EmptyState
@@ -378,7 +384,7 @@ export default function Home() {
           </ScrollArea>
 
           {/* Interactive Bazaar Shell Composer */}
-          <CardFooter className="border-t border-border/50 bg-background/95 p-4">
+          <CardFooter className="relative z-10 border-t border-border/50 bg-background/95 p-4">
             <div className="w-full">
               <Composer
                 input={input}
