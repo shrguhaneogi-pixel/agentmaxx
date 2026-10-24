@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { describe, it, beforeEach } from "node:test";
 import { NextRequest } from "next/server";
+import { keccak256, parseEther, toHex, verifyTypedData, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { BazaarEscrowABI } from "../agent/abi/BazaarEscrow";
+import {
+  createWallet,
+  executeOnChainSettlement,
+  getWalletAddress,
+} from "../agent/wallet";
 import {
   getEIP712Domain,
   EIP712_PAYMENT_TYPES,
@@ -1288,6 +1295,223 @@ describe("Marzban Bazaar Merchant Engine", () => {
       const expiredClaim = await nonceStore.claimNonce(testAddress, "another-nonce", Math.floor(Date.now() / 1000) - 5);
       assert.equal(expiredClaim.success, false);
       assert.match(String(expiredClaim.reason), /deadline has expired/i);
+    });
+  });
+
+  describe("Bazaar On-Chain Settlement & Escrow Integration", () => {
+    it("successfully settles authorized deal on-chain via mocked Viem clients", async () => {
+      // 1. Establish an agreed deal
+      const haggleRes = haggle("brass-astrolabe", 100);
+      assert.equal(haggleRes.status, "accepted");
+      const dealId = haggleRes.dealId!;
+
+      // 2. Ensure agent has a wallet
+      createWallet();
+      const agentAddress = getWalletAddress();
+      assert.ok(agentAddress, "Agent must have a wallet address");
+
+      // 3. Setup mock Viem walletClient and publicClient
+      const mockTxHash = "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" as const;
+      let capturedArgs: any = null;
+
+      const mockWalletClient = {
+        writeContract: async (args: any) => {
+          capturedArgs = args;
+          return mockTxHash;
+        },
+      };
+
+      const mockPublicClient = {
+        waitForTransactionReceipt: async ({ hash }: { hash: string }) => {
+          return {
+            status: "success",
+            transactionHash: hash,
+            blockNumber: 8453200n,
+            gasUsed: 65432n,
+            logs: [],
+          };
+        },
+      };
+
+      // 4. Execute pay_invoice in on-chain mode
+      const payTool = tools.find((t) => t.name === "pay_invoice");
+      assert.ok(payTool, "pay_invoice tool must be registered");
+
+      const payRes: any = await payTool.run(
+        { dealId, mode: "on-chain", amount: "0.02", asset: "ETH" },
+        {
+          baseUrl: "http://localhost:3000",
+          confirmedDealId: dealId,
+          onChain: true,
+          onChainOptions: {
+            contractAddress: "0x2222222222222222222222222222222222222222",
+            walletClient: mockWalletClient,
+            publicClient: mockPublicClient,
+          },
+        }
+      );
+
+      // 5. Verify tool response
+      assert.equal(payRes.success, true);
+      assert.equal(payRes.dealId, dealId);
+      assert.equal(payRes.txHash, mockTxHash);
+      assert.equal(payRes.blockNumber, "8453200");
+      assert.equal(payRes.gasUsed, "65432");
+      assert.ok(payRes.receiptId);
+
+      // 6. Verify writeContract invocations and cryptographic payload
+      assert.ok(capturedArgs);
+      assert.equal(capturedArgs.address, "0x2222222222222222222222222222222222222222");
+      assert.equal(capturedArgs.functionName, "settlePayment");
+      assert.equal(capturedArgs.value, parseEther("0.02"));
+
+      const [p, signature] = capturedArgs.args;
+      assert.equal(p.from.toLowerCase(), agentAddress.toLowerCase());
+      assert.equal(p.resource, dealId);
+      assert.equal(p.amount, "0.02");
+      assert.equal(p.asset, "ETH");
+      assert.ok(p.nonce);
+      assert.ok(p.deadline > 0n);
+      assert.ok(typeof signature === "string" && signature.startsWith("0x"));
+
+      // Verify signature recovers agentAddress
+      const isValid = await verifyTypedData({
+        address: p.from,
+        domain: getEIP712Domain("0x2222222222222222222222222222222222222222"),
+        types: EIP712_PAYMENT_TYPES,
+        primaryType: "Payment",
+        message: buildPaymentMessage({
+          from: p.from,
+          to: p.to,
+          amount: p.amount,
+          asset: p.asset,
+          resource: p.resource,
+          nonce: p.nonce,
+          deadline: Number(p.deadline),
+        }),
+        signature: signature as Hex,
+      });
+      assert.equal(isValid, true, "Signature must be cryptographically valid for p.from");
+
+      // 7. Verify stall and deal status transitioned to completed
+      const completedDeal = getDeal(dealId);
+      assert.equal(completedDeal?.status, "completed");
+      assert.equal(completedDeal?.paymentState, "completed");
+      const item = getItem("brass-astrolabe");
+      assert.equal(item?.availability, "sold");
+    });
+
+    it("catches contract reverts (e.g. replay or expiry) and transitions deal state cleanly", async () => {
+      // 1. Establish an agreed deal
+      const haggleRes = haggle("silk-scarf", 50);
+      assert.equal(haggleRes.status, "accepted");
+      const dealId = haggleRes.dealId!;
+
+      // 2. Setup mock walletClient that simulates an EVM revert
+      const mockRevertingWallet = {
+        writeContract: async () => {
+          throw new Error("Contract execution reverted: Replay detected");
+        },
+      };
+
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+      const payRes: any = await payTool.run(
+        { dealId, mode: "on-chain" },
+        {
+          baseUrl: "http://localhost:3000",
+          confirmedDealId: dealId,
+          onChain: true,
+          onChainOptions: {
+            walletClient: mockRevertingWallet,
+            publicClient: { waitForTransactionReceipt: async () => ({}) },
+          },
+        }
+      );
+
+      // 3. Verify clean error response without crashing
+      assert.ok(payRes.error);
+      assert.match(payRes.error, /Replay detected/i);
+      assert.match(payRes.error, /The item remains reserved/i);
+
+      // 4. Verify deal marked failed and item remains reserved for retry
+      const deal = getDeal(dealId);
+      assert.equal(deal?.paymentState, "failed");
+      const item = getItem("silk-scarf");
+      assert.equal(item?.availability, "reserved");
+      assert.equal(item?.paymentState, "failed");
+    });
+
+    it("handles on-chain transaction status 'reverted' during block mining", async () => {
+      const haggleRes = haggle("saffron-tin", 35);
+      assert.equal(haggleRes.status, "accepted");
+      const dealId = haggleRes.dealId!;
+
+      const mockRevertingReceipt = {
+        writeContract: async () => "0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      };
+
+      const mockFailingPublicClient = {
+        waitForTransactionReceipt: async ({ hash }: { hash: string }) => {
+          return {
+            status: "reverted",
+            transactionHash: hash,
+            blockNumber: 100n,
+            gasUsed: 21000n,
+            logs: [],
+          };
+        },
+      };
+
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+      const payRes: any = await payTool.run(
+        { dealId, mode: "on-chain" },
+        {
+          baseUrl: "http://localhost:3000",
+          confirmedDealId: dealId,
+          onChain: true,
+          onChainOptions: {
+            walletClient: mockRevertingReceipt,
+            publicClient: mockFailingPublicClient,
+          },
+        }
+      );
+
+      assert.ok(payRes.error);
+      assert.match(payRes.error, /reverted on-chain/i);
+      const deal = getDeal(dealId);
+      assert.equal(deal?.paymentState, "failed");
+      const item = getItem("saffron-tin");
+      assert.equal(item?.availability, "reserved");
+      assert.equal(item?.paymentState, "failed");
+    });
+
+    it("verifies cryptographic parity between TypeScript EIP-712 schema and Solidity PAYMENT_TYPEHASH", () => {
+      const solidityTypeString =
+        "Payment(address from,address to,string amount,string asset,string resource,string nonce,uint256 deadline)";
+      const expectedTypeHash = keccak256(toHex(solidityTypeString));
+
+      // Reconstruct from EIP712_PAYMENT_TYPES definition
+      const tsFields = EIP712_PAYMENT_TYPES.Payment.map((f) => `${f.type} ${f.name}`).join(",");
+      const reconstructedTypeString = `Payment(${tsFields})`;
+      const tsComputedTypeHash = keccak256(toHex(reconstructedTypeString));
+
+      assert.equal(
+        tsComputedTypeHash,
+        expectedTypeHash,
+        "TypeScript EIP-712 Payment schema must match Solidity TYPEHASH exactly"
+      );
+
+      // Verify BazaarEscrow ABI contains PAYMENT_TYPEHASH and settlePayment function
+      const typeHashEntry = BazaarEscrowABI.find(
+        (item) => item.type === "function" && item.name === "PAYMENT_TYPEHASH"
+      );
+      assert.ok(typeHashEntry, "BazaarEscrow ABI must expose PAYMENT_TYPEHASH");
+
+      const settlePaymentEntry = BazaarEscrowABI.find(
+        (item) => item.type === "function" && item.name === "settlePayment"
+      );
+      assert.ok(settlePaymentEntry, "BazaarEscrow ABI must expose settlePayment");
+      assert.equal(settlePaymentEntry.stateMutability, "payable");
     });
   });
 });
