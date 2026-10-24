@@ -1,5 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it, beforeEach } from "node:test";
+import { NextRequest } from "next/server";
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import {
+  getEIP712Domain,
+  EIP712_PAYMENT_TYPES,
+  buildPaymentMessage,
+  BASE_SEPOLIA_CHAIN_ID,
+  type PaymentPayload,
+} from "../agent/crypto";
+import { getNonceStore, resetNonceStore } from "../agent/nonce";
+import { GET as checkoutGet } from "../app/api/bazaar/checkout/route";
 import {
   beginPayment,
   calculateCounterPrice,
@@ -947,7 +958,7 @@ describe("Marzban Bazaar Merchant Engine", () => {
       assert.match(String(emptyRes.error), /Missing required parameter: country/i);
     });
 
-    it("verifies x402 payment cryptographic signatures via EIP-191 verification", async () => {
+    it("verifies x402 payment cryptographic signatures via EIP-712 typed structured data verification", async () => {
       const { createWallet, verifyPayment } = await import("../agent/wallet");
       const address = createWallet();
       assert.ok(address, "Wallet address must exist");
@@ -961,7 +972,15 @@ describe("Marzban Bazaar Merchant Engine", () => {
 
       const tamperedPayload = Buffer.from(
         JSON.stringify({
-          payment: { from: address, to: address, amount: "1.0", asset: "USDC" },
+          payment: {
+            from: address,
+            to: address,
+            amount: "1.0",
+            asset: "USDC",
+            resource: "/test",
+            nonce: "abc",
+            deadline: Math.floor(Date.now() / 1000) + 300,
+          },
           signature: "0x1234",
         })
       ).toString("base64");
@@ -1021,6 +1040,254 @@ describe("Marzban Bazaar Merchant Engine", () => {
       )) as unknown) as Record<string, unknown>;
       assert.ok(res.error, "Weather tool must return an error object on connection failure");
       assert.match(String(res.error), /Weather service unavailable:/i);
+    });
+  });
+
+  describe("EIP-712 Cryptographic Hardening & Distributed Replay Protection", () => {
+    async function signTestPayment(
+      account: ReturnType<typeof privateKeyToAccount>,
+      overrides: Partial<PaymentPayload> = {},
+      customDomain?: Record<string, unknown>
+    ) {
+      const deadline =
+        overrides.deadline !== undefined ? overrides.deadline : Math.floor(Date.now() / 1000) + 300;
+      const payment: PaymentPayload = {
+        from: account.address,
+        to: "0x000000000000000000000000000000000000dEaD",
+        amount: "0.01",
+        asset: "USDC",
+        resource: "/api/bazaar/checkout",
+        nonce: crypto.randomUUID(),
+        deadline,
+        ...overrides,
+      };
+
+      const domain = (customDomain || getEIP712Domain()) as any;
+      const signature = await account.signTypedData({
+        domain,
+        types: EIP712_PAYMENT_TYPES,
+        primaryType: "Payment",
+        message: buildPaymentMessage(payment),
+      });
+
+      const header = Buffer.from(JSON.stringify({ payment, signature })).toString("base64");
+      return { payment, signature, header };
+    }
+
+    function createCheckoutRequest(dealId: string, header?: string): NextRequest {
+      const url = `http://localhost:3000/api/bazaar/checkout?dealId=${encodeURIComponent(dealId)}`;
+      const headers = new Headers();
+      if (header) {
+        headers.set("X-PAYMENT", header);
+      }
+      return new NextRequest(url, { headers });
+    }
+
+    it("generates and verifies valid EIP-712 typed structured data payment authorization", async () => {
+      const { verifyPayment } = await import("../agent/wallet");
+      const account = privateKeyToAccount(generatePrivateKey());
+      const { payment, header } = await signTestPayment(account);
+
+      const verified = await verifyPayment(header);
+      assert.ok(verified, "Valid EIP-712 payment authorization must be verified successfully");
+      assert.equal(verified.from.toLowerCase(), account.address.toLowerCase());
+      assert.equal(verified.amount, payment.amount);
+      assert.equal(verified.asset, "USDC");
+      assert.equal(verified.nonce, payment.nonce);
+      assert.equal(verified.deadline, payment.deadline);
+    });
+
+    it("rejects tampered payment payload fields (amount, to, resource, nonce, deadline)", async () => {
+      const { verifyPayment } = await import("../agent/wallet");
+      const account = privateKeyToAccount(generatePrivateKey());
+      const { payment, signature } = await signTestPayment(account);
+
+      // 1. Tampered amount
+      const tamperedAmount = Buffer.from(
+        JSON.stringify({ payment: { ...payment, amount: "100.0" }, signature })
+      ).toString("base64");
+      assert.equal(await verifyPayment(tamperedAmount), null, "Tampered amount must be rejected");
+
+      // 2. Tampered recipient
+      const tamperedTo = Buffer.from(
+        JSON.stringify({ payment: { ...payment, to: "0x1234567890123456789012345678901234567890" }, signature })
+      ).toString("base64");
+      assert.equal(await verifyPayment(tamperedTo), null, "Tampered recipient must be rejected");
+
+      // 3. Tampered resource
+      const tamperedResource = Buffer.from(
+        JSON.stringify({ payment: { ...payment, resource: "/api/malicious" }, signature })
+      ).toString("base64");
+      assert.equal(await verifyPayment(tamperedResource), null, "Tampered resource must be rejected");
+
+      // 4. Tampered nonce
+      const tamperedNonce = Buffer.from(
+        JSON.stringify({ payment: { ...payment, nonce: "hacked-nonce" }, signature })
+      ).toString("base64");
+      assert.equal(await verifyPayment(tamperedNonce), null, "Tampered nonce must be rejected");
+
+      // 5. Tampered deadline
+      const tamperedDeadline = Buffer.from(
+        JSON.stringify({ payment: { ...payment, deadline: payment.deadline + 1000 }, signature })
+      ).toString("base64");
+      assert.equal(await verifyPayment(tamperedDeadline), null, "Tampered deadline must be rejected");
+    });
+
+    it("rejects signatures created with mismatched domain (wrong chainId or wrong verifyingContract)", async () => {
+      const { verifyPayment } = await import("../agent/wallet");
+      const account = privateKeyToAccount(generatePrivateKey());
+
+      // 1. Wrong chainId (Ethereum Mainnet 1 instead of Base Sepolia 84532)
+      const wrongChain = await signTestPayment(account, {}, {
+        ...getEIP712Domain(),
+        chainId: 1,
+      });
+      assert.equal(await verifyPayment(wrongChain.header), null, "Mismatched chainId must fail verification");
+
+      // 2. Wrong verifyingContract
+      const wrongContract = await signTestPayment(account, {}, {
+        ...getEIP712Domain(),
+        verifyingContract: "0x1111111111111111111111111111111111111111",
+      });
+      assert.equal(await verifyPayment(wrongContract.header), null, "Mismatched verifyingContract must fail verification");
+    });
+
+    it("rejects expired payment authorization payloads with HTTP 403 on the checkout route", async () => {
+      const { verifyPayment } = await import("../agent/wallet");
+      resetStall("cheerful");
+      const haggleRes = haggle("brass-astrolabe", 85);
+      assert.equal(haggleRes.status, "accepted");
+      assert.ok(haggleRes.dealId);
+
+      const account = privateKeyToAccount(generatePrivateKey());
+      // Expired deadline: 15 seconds in the past
+      const pastDeadline = Math.floor(Date.now() / 1000) - 15;
+      const { header } = await signTestPayment(account, { deadline: pastDeadline });
+
+      // Direct verifyPayment check
+      const directVerify = await verifyPayment(header);
+      assert.equal(directVerify, null, "Expired payload must return null from verifyPayment");
+
+      // Route-level check
+      const req = createCheckoutRequest(haggleRes.dealId, header);
+      const res = await checkoutGet(req);
+      assert.equal(res.status, 403, "Checkout route must reject expired authorization with HTTP 403");
+
+      const body = (await res.json()) as Record<string, unknown>;
+      assert.equal(body.code, "PAYMENT_EXPIRED");
+      assert.match(String(body.error), /Payment authorization has expired/i);
+
+      // Verify business state: deal remains pending_payment, item remains reserved, 0 receipts
+      assert.equal(getDeal(haggleRes.dealId)?.status, "pending_payment");
+      assert.equal(getItem("brass-astrolabe")?.availability, "reserved");
+      assert.equal(getAllReceipts().length, 0);
+    });
+
+    it("detects and blocks replay attacks on duplicate submissions with HTTP 403", async () => {
+      resetStall("cheerful");
+      await resetNonceStore();
+
+      const haggleRes = haggle("saffron-tin", 35);
+      assert.equal(haggleRes.status, "accepted");
+      assert.ok(haggleRes.dealId);
+
+      const account = privateKeyToAccount(generatePrivateKey());
+      const { header } = await signTestPayment(account);
+
+      // First request: valid, unused nonce -> succeeds with 200 OK
+      const req1 = createCheckoutRequest(haggleRes.dealId, header);
+      const res1 = await checkoutGet(req1);
+      assert.equal(res1.status, 200, "First checkout submission must succeed with HTTP 200");
+      const body1 = (await res1.json()) as Record<string, unknown>;
+      assert.equal(body1.success, true);
+      assert.equal(body1.dealId, haggleRes.dealId);
+      assert.equal(getDeal(haggleRes.dealId)?.status, "completed");
+      assert.equal(getItem("saffron-tin")?.availability, "sold");
+      assert.equal(getAllReceipts().length, 1);
+
+      // Second request: identical payload and nonce -> Replay Attack Detected with HTTP 403
+      const req2 = createCheckoutRequest(haggleRes.dealId, header);
+      const res2 = await checkoutGet(req2);
+      assert.equal(res2.status, 403, "Replayed checkout submission must be rejected with HTTP 403");
+      const body2 = (await res2.json()) as Record<string, unknown>;
+      assert.equal(body2.code, "REPLAY_DETECTED");
+      assert.match(String(body2.error), /Replay Attack Detected/i);
+
+      // Verify state machine integrity: exactly 1 receipt issued
+      assert.equal(getAllReceipts().length, 1, "Replay attack must not generate an additional receipt");
+    });
+
+    it("enforces atomic single-use nonce lock under high concurrent load (Promise.all)", async () => {
+      resetStall("cheerful");
+      await resetNonceStore();
+
+      const haggleRes = haggle("silk-scarf", 55);
+      assert.equal(haggleRes.status, "accepted");
+      assert.ok(haggleRes.dealId);
+
+      const account = privateKeyToAccount(generatePrivateKey());
+      const { header } = await signTestPayment(account);
+
+      // Fire 10 concurrent requests with the exact same payload
+      const requests = Array.from({ length: 10 }, () =>
+        checkoutGet(createCheckoutRequest(haggleRes.dealId!, header))
+      );
+      const responses = await Promise.all(requests);
+
+      const okResponses = responses.filter((r) => r.status === 200);
+      const replayResponses = responses.filter((r) => r.status === 403);
+
+      assert.equal(okResponses.length, 1, "Exactly one concurrent request must win the atomic nonce claim and return HTTP 200");
+      assert.equal(replayResponses.length, 9, "All 9 concurrent duplicate requests must be blocked with HTTP 403");
+
+      // Verify state machine: exactly one receipt issued, item sold
+      assert.equal(getAllReceipts().length, 1, "Exactly 1 receipt must be issued across concurrent requests");
+      assert.equal(getItem("silk-scarf")?.availability, "sold");
+    });
+
+    it("allows distinct nonces from the same or different signers to execute independently without collision", async () => {
+      resetStall("cheerful");
+      await resetNonceStore();
+
+      const haggle1 = haggle("haunted-lamp", 70);
+      assert.equal(haggle1.status, "accepted");
+
+      const haggle2 = haggle("spice-box", 45);
+      assert.equal(haggle2.status, "accepted");
+
+      const account = privateKeyToAccount(generatePrivateKey());
+      const auth1 = await signTestPayment(account, { nonce: crypto.randomUUID() });
+      const auth2 = await signTestPayment(account, { nonce: crypto.randomUUID() });
+
+      const res1 = await checkoutGet(createCheckoutRequest(haggle1.dealId!, auth1.header));
+      const res2 = await checkoutGet(createCheckoutRequest(haggle2.dealId!, auth2.header));
+
+      assert.equal(res1.status, 200, "Deal 1 must succeed");
+      assert.equal(res2.status, 200, "Deal 2 must succeed");
+      assert.equal(getAllReceipts().length, 2, "Both distinct nonces must result in completed receipts");
+    });
+
+    it("directly verifies NonceStore atomic claim, TTL expiration, and sweep logic", async () => {
+      const nonceStore = getNonceStore();
+      await resetNonceStore();
+
+      const testAddress = "0x0000000000000000000000000000000000001234" as const;
+      const testNonce = "test-nonce-123";
+      const validDeadline = Math.floor(Date.now() / 1000) + 60;
+
+      // 1. Initial claim succeeds
+      const claim1 = await nonceStore.claimNonce(testAddress, testNonce, validDeadline);
+      assert.equal(claim1.success, true);
+
+      // 2. Immediate duplicate claim fails
+      const claim2 = await nonceStore.claimNonce(testAddress, testNonce, validDeadline);
+      assert.equal(claim2.success, false);
+      assert.match(String(claim2.reason), /Replay Attack Detected/i);
+
+      // 3. Claiming with already-expired deadline fails
+      const expiredClaim = await nonceStore.claimNonce(testAddress, "another-nonce", Math.floor(Date.now() / 1000) - 5);
+      assert.equal(expiredClaim.success, false);
+      assert.match(String(expiredClaim.reason), /deadline has expired/i);
     });
   });
 });
