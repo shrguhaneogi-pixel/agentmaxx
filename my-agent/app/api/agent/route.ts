@@ -88,8 +88,9 @@ export async function POST(
     const baseUrl = `${proto}://${host}`;
     const confirmedDealId =
       typeof body.confirmedDealId === "string" ? body.confirmedDealId : undefined;
+    const requestId = req.headers.get("x-request-id") || undefined;
 
-    const result = await runAgent(messages, { baseUrl, confirmedDealId });
+    const result = await runAgent(messages, { baseUrl, confirmedDealId, requestId });
     return NextResponse.json(result);
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
