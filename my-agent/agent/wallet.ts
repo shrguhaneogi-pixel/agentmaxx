@@ -2,23 +2,36 @@
  * THE AGENT'S WALLET
  *
  * The agent owns a wallet (a private key). It uses it to sign payments,
- * so it can pay for APIs on its own. This is the "x402" idea:
+ * so it can pay for APIs on its own using the EIP-712 typed structured data
+ * standard on Base Sepolia.
  *
  *   1. Agent calls an API         ->  API answers "402 Payment Required" + a price
- *   2. Agent signs a payment      ->  with its wallet
- *   3. Agent retries with payment ->  API checks the signature and answers 200 OK
+ *   2. Agent signs a payment      ->  with its wallet via EIP-712 signTypedData
+ *   3. Agent retries with payment ->  API verifies EIP-712 signature & claims nonce
  *
- * You create the wallet with the "Create wallet" button on the page.
- * It is saved in `.agent-wallet.json` so it survives restarts.
- *
- * Payments here are signed but NOT sent on-chain (it's a demo, no real money).
+ * Payments here are signed test payments on Base Sepolia.
  */
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { createPublicClient, formatEther, http, verifyMessage, type Address, type Hex } from "viem";
+import {
+  createPublicClient,
+  formatEther,
+  http,
+  verifyTypedData,
+  type Address,
+  type Hex,
+} from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+import {
+  buildPaymentMessage,
+  getEIP712Domain,
+  EIP712_PAYMENT_TYPES,
+  validatePaymentPayload,
+  type PaymentPayload,
+  type SignedPaymentAuthorization,
+} from "./crypto";
 
 const WALLET_TMP_PATH = path.join(os.tmpdir(), ".agent-wallet.json");
 
@@ -27,14 +40,7 @@ const chain = createPublicClient({
   transport: http(undefined, { timeout: 10_000 }),
 });
 
-export type Payment = {
-  from: Address;
-  to: Address;
-  amount: string;
-  asset: string;
-  resource: string;
-  nonce: string;
-};
+export type Payment = PaymentPayload;
 
 // In-memory fallback if file system is completely unavailable or ephemeral
 let inMemoryPrivateKey: Hex | null = null;
@@ -170,7 +176,7 @@ export interface PaymentExecutionResult {
   };
 }
 
-/** Fetch a URL. If it asks for payment (402), sign one with the wallet and try again. */
+/** Fetch a URL. If it asks for payment (402), sign an EIP-712 payment with the wallet and try again. */
 export async function payAndFetch(url: string, defaultBase = "http://localhost:3000"): Promise<PaymentExecutionResult> {
   let resolvedUrl: string;
   let resource: string;
@@ -199,16 +205,30 @@ export async function payAndFetch(url: string, defaultBase = "http://localhost:3
   const asset = typeof paymentOffer.asset === "string" ? paymentOffer.asset : "USDC";
   const payTo = (typeof paymentOffer.payTo === "string" ? paymentOffer.payTo : "0x000000000000000000000000000000000000dEaD") as Address;
 
+  // Generate 5-minute deadline and cryptographic UUID nonce
+  const deadline = Math.floor(Date.now() / 1000) + 300;
+  const nonce = crypto.randomUUID();
+
   const payment: Payment = {
     from: account.address,
     to: payTo,
     amount: price,
     asset,
     resource,
-    nonce: crypto.randomUUID(),
+    nonce,
+    deadline,
   };
-  const signature = await account.signMessage({ message: JSON.stringify(payment) });
-  const header = Buffer.from(JSON.stringify({ payment, signature })).toString("base64");
+
+  // EIP-712 Typed Structured Data Signing
+  const signature = await account.signTypedData({
+    domain: getEIP712Domain(),
+    types: EIP712_PAYMENT_TYPES,
+    primaryType: "Payment",
+    message: buildPaymentMessage(payment),
+  });
+
+  const authorization: SignedPaymentAuthorization = { payment, signature };
+  const header = Buffer.from(JSON.stringify(authorization)).toString("base64");
 
   const paid = await fetch(resolvedUrl, { headers: { "X-PAYMENT": header } });
   const data: unknown = await paid.json().catch(async () => {
@@ -218,33 +238,53 @@ export async function payAndFetch(url: string, defaultBase = "http://localhost:3
 
   return {
     data,
-    payment: { status: paid.status, amount: `${price} ${asset}`, to: payTo, signature: `${signature.slice(0, 18)}...` },
+    payment: {
+      status: paid.status,
+      amount: `${price} ${asset}`,
+      to: payTo,
+      signature: `${signature.slice(0, 18)}...`,
+    },
   };
 }
 
-/** Used by the API: is this X-PAYMENT header a real, signed payment? */
+/**
+ * Used by the API: verifies incoming X-PAYMENT header using EIP-712 typed structured data verification.
+ * Enforces deadline check, payload syntax validation, and cryptographic signature recovery against payment.from.
+ */
 export async function verifyPayment(header: string | null): Promise<Payment | null> {
   if (!header) return null;
   try {
-    const parsed: unknown = JSON.parse(Buffer.from(header, "base64").toString());
+    const parsed: unknown = JSON.parse(Buffer.from(header, "base64").toString("utf8"));
     if (typeof parsed !== "object" || parsed === null) return null;
 
     const record = parsed as Record<string, unknown>;
-    if (!record.payment || typeof record.payment !== "object" || !record.signature || typeof record.signature !== "string") {
+    const rawPayment = record.payment;
+    const signature = record.signature;
+
+    if (typeof signature !== "string" || !signature.startsWith("0x")) {
       return null;
     }
 
-    const payment = record.payment as Payment;
-    const signature = record.signature as Hex;
+    const payment = validatePaymentPayload(rawPayment);
+    if (!payment) return null;
 
-    if (!payment.from || !payment.to || !payment.amount || !payment.asset) {
+    // Reject expired authorizations immediately
+    const nowSeconds = Math.floor(Date.now() / 1000);
+    if (nowSeconds > payment.deadline) {
       return null;
     }
 
-    const valid = await verifyMessage({ address: payment.from, message: JSON.stringify(payment), signature });
+    const valid = await verifyTypedData({
+      address: payment.from,
+      domain: getEIP712Domain(),
+      types: EIP712_PAYMENT_TYPES,
+      primaryType: "Payment",
+      message: buildPaymentMessage(payment),
+      signature: signature as Hex,
+    });
+
     return valid ? payment : null;
   } catch {
     return null;
   }
 }
-
