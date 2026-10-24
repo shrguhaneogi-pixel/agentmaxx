@@ -1,0 +1,59 @@
+name: 🐛 Bug Report
+description: Report an issue, unexpected behavior, or error in Marzban
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please do NOT post real private keys, seed phrases, or sensitive API keys in this form.
+  - type: input
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which part of the system is failing? (e.g., Bazaar Engine, EIP-712 Signing, Telemetry, UI/Cursor, Next.js App Router)
+      placeholder: e.g. EIP-712 Signing / Bazaar Engine
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can maintainers reproduce the issue?
+      placeholder: |
+        1. Run 'npm test' or start local dev
+        2. Propose trade offer '...'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized Logs / Error Output
+      description: Paste any error messages or stack traces (ensure secrets, keys, and tokens are redacted).
+      render: shell
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local Development (Node v20/v24)
+        - Base Sepolia Testnet
+        - Docker / Container
+        - Production / Vercel
+    validations:
+      required: true

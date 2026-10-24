@@ -6,15 +6,16 @@
 
 **Autonomous Street-Market Merchant Agent with Multi-Round Negotiation, EIP-712 Cryptographic Gating, and Base Sepolia On-Chain Escrow Settlement**
 
-[![Next.js 16](https://img.shields.io/badge/Next.js-16.4.0-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.4.3_(Patched)-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.3.0-149eca?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Google Gen AI](https://img.shields.io/badge/@google/genai-2.24.0-4285F4?style=flat-square&logo=google)](https://www.npmjs.com/package/@google/genai)
 [![Viem v2](https://img.shields.io/badge/viem-2.56.9-2030D8?style=flat-square&logo=ethereum)](https://viem.sh/)
 [![Solidity 0.8.24](https://img.shields.io/badge/Solidity-0.8.24_(Cancun)-363636?style=flat-square&logo=solidity)](https://soliditylang.org/)
 [![Network Base Sepolia](https://img.shields.io/badge/Network-Base_Sepolia_(84532)-0052FF?style=flat-square&logo=coinbase)](https://sepolia.basescan.org/)
-[![Automated Tests](https://img.shields.io/badge/Tests-62%2F62_Passing-10B981?style=flat-square&logo=checkmarx)](https://nodejs.org/api/test.html)
-[![License MIT](https://img.shields.io/badge/License-MIT-D3F65A?style=flat-square&labelColor=10110F)](./LICENSE)
+[![Automated Tests](https://img.shields.io/badge/Tests-69%2F69_Passing-10B981?style=flat-square&logo=checkmarx)](https://nodejs.org/api/test.html)
+[![Hacktoberfest 2026](https://img.shields.io/badge/Hacktoberfest-2026_Ready-7A1022?style=flat-square&logo=hacktoberfest)](./CONTRIBUTING.md)
+[![License MIT](https://img.shields.io/badge/License-MIT-C5A059?style=flat-square&labelColor=180D11)](./LICENSE)
 
 > *"Welcome, traveler, to the Grand Bazaar of Nishapur! I am Marzban—purveyor of celestial relics, guardian of confidential reserve floors, and humble servant of honest silver. Inquire of the stars, haggle for the legendary Brass Astrolabe, or test your wit against my stall. But heed this counsel: insult my wares with a pittance, and you shall taste an unyielding counter-offer!"*
 
@@ -315,6 +316,66 @@ npm run build
 | **503 Service Unavailable** | Google Gen AI upstream API rate limit or transient regional outage. | `GoogleGenAIError: [503 Service Unavailable] The model is overloaded. Please try again later.` | Configure `GEMINI_MODEL="gemini-flash-latest"` for the highest quota availability. The agent loop automatically aborts safely without corrupting deal states. |
 | **Safety Filter Block** | Gemini blocked generation due to safety thresholds triggered by prompt text. | `finishReason: "SAFETY"` / `Candidate blocked by safety settings` | Marzban's system prompt enforces a respectful merchant persona. Ensure test inputs do not contain disallowed content. |
 | **Buyer Authorization Denied** | The agent attempted to call `pay_invoice` without clear affirmative consent in the current turn. | `{"error": "Payment authorization denied: Buyer indicated hesitation, dissent, refusal, or cancellation in the current turn.", "dealId": "deal-xxx", "buyerConfirmationRequired": true}` | The buyer must explicitly respond with affirmative consent (e.g., *"Yes, proceed to checkout"* or *"Deal, let's pay"*) in the current conversation turn. |
+
+---
+
+## 🎨 Marzban Bazaar UI/UX Transformation
+
+The user interface has transitioned from a plain terminal console into an immersive Persian bazaar night atmosphere:
+
+- **Design System & Palette:**
+  - **Deep Crimson:** `#7A1022` (velvet accents, merchant stalls, ambient lantern glow)
+  - **Aged Parchment:** `#F4F1EA` (readable high-contrast content surfaces, dialogue cards)
+  - **Metallic Brass:** `#C5A059` (reticles, astrolabes, coin pouch, interactive borders)
+  - **Night Background:** `#11080A` (deep charcoal crimson canvas with celestial coordinate grid)
+- **Visual Wares Inventory (`components/bazaar-inventory.tsx`):**
+  - Displays all 6 exotic wares with live availability (`AVAILABLE`, `RESERVED`, `CLAIMED / SOLD`).
+  - Real-time bargaining rounds tracker (4 maximum rounds per item).
+  - Quick haggle (~75% offer) and custom silver proposal controls.
+- **Interactive Cursor (`components/ui/bazaar-cursor.tsx`):**
+  - ReactBits.dev-inspired dual reticle pointer treatment with metallic brass and crimson glow.
+  - Performance: Direct compositor transforms (`translate3d`), zero React re-renders on mousemove.
+  - Accessibility: Automatically disabled on touchscreens (`pointer: coarse`) and when `prefers-reduced-motion` is active; `pointer-events: none` ensures zero interference with clicks or selections.
+- **Atmospheric 3D Backdrop (`components/bazaar-spline-environment.tsx`):**
+  - Optional Spline 3D scene support (`NEXT_PUBLIC_SPLINE_SCENE_URL`) with seamless procedural canvas/SVG fallback (floating brass embers, glowing lantern vignettes, rotating celestial astrolabe).
+
+---
+
+## 📊 Observability & Telemetry Architecture
+
+Marzban instruments agent execution via `my-agent/agent/telemetry.ts` with strict security and privacy guarantees:
+
+```ts
+export interface TelemetrySpan {
+  traceId: string;
+  requestId: string;
+  model: string;
+  timestamp: string;
+  startTime: number;
+  totalDurationMs?: number;
+  modelLatencyMs?: number;
+  reactIterations: number;
+  toolCallsCount: number;
+  toolsInvoked: string[];
+  retries: number;
+  status: "success" | "error" | "rate_limited" | "safety_blocked";
+  settlementMilestone?: "deal_created" | "payment_authorized" | "settlement_confirmed" | "settlement_failed";
+}
+```
+
+- **Cryptographic Redaction:** Automatically strips 64-character EVM private keys, Google API keys, Bearer tokens, and sensitive secrets via `redactSensitiveData()`.
+- **Fail-Safe Isolation:** Telemetry operations are strictly non-blocking; telemetry anomalies can never crash agent execution or EVM settlement.
+- **Zero Hallucination:** Only records observed durations, iterations, and statuses.
+
+---
+
+## 🎃 Hacktoberfest 2026 & Open-Source Community
+
+Marzban welcomes open-source contributors for **Hacktoberfest 2026**!
+
+- 📖 **Contributor Guide:** See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for full local setup, testnet configuration, and coding standards.
+- 🐛 **Issue Templates:** Use our structured GitHub forms for [Bug Reports](.github/ISSUE_TEMPLATE/bug_report.yml), [Feature Requests](.github/ISSUE_TEMPLATE/feature_request.yml), and [AI Agent Tool Proposals](.github/ISSUE_TEMPLATE/agent_tool_proposal.yml).
+- 🏷️ **Repository Topics:** `hacktoberfest`, `ai-agent`, `web3`, `base-sepolia`, `nextjs16`, `eip-712`.
 
 ---
 
