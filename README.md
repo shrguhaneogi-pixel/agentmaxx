@@ -369,13 +369,13 @@ export interface TelemetrySpan {
 
 ---
 
-## 🎃 Hacktoberfest 2026 & Open-Source Community
+## 🎃 Rise-in & Open-Source Community
 
-Marzban welcomes open-source contributors for **Hacktoberfest 2026**!
+Marzban welcomes open-source contributors for **Agentmaxxin 26**!
 
 - 📖 **Contributor Guide:** See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for full local setup, testnet configuration, and coding standards.
 - 🐛 **Issue Templates:** Use our structured GitHub forms for [Bug Reports](.github/ISSUE_TEMPLATE/bug_report.yml), [Feature Requests](.github/ISSUE_TEMPLATE/feature_request.yml), and [AI Agent Tool Proposals](.github/ISSUE_TEMPLATE/agent_tool_proposal.yml).
-- 🏷️ **Repository Topics:** `hacktoberfest`, `ai-agent`, `web3`, `base-sepolia`, `nextjs16`, `eip-712`.
+- 🏷️ **Repository Topics:** `agentmaxxin`, `rise-in`, `ai-agent`, `web3`, `base-sepolia`, `nextjs16`, `eip-712`.
 
 ---
 
