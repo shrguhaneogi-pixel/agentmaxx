@@ -30,3 +30,7 @@ pnpm-debug.log*
 # Operating systems
 .DS_Store
 Thumbs.db
+
+# Hardhat build output
+artifacts/
+cache/
