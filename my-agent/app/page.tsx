@@ -25,6 +25,7 @@ import { Composer } from "@/components/chat/composer";
 import { CommandPalette } from "@/components/command-palette";
 import { BazaarInventory } from "@/components/bazaar-inventory";
 import { BazaarSplineEnvironment } from "@/components/bazaar-spline-environment";
+import { BazaarAstrolabe3D } from "@/components/astrolabe";
 import { cn } from "@/lib/utils";
 
 type Message = {
@@ -51,6 +52,10 @@ export default function Home() {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [bazaarMood, setBazaarMood] = useState<Mood>("neutral");
   const [stallRefresh, setStallRefresh] = useState<number>(0);
+  const [negotiationRound, setNegotiationRound] = useState<number>(1);
+  const [isNegotiating, setIsNegotiating] = useState<boolean>(false);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState<boolean>(false);
+  const [showAstrolabe, setShowAstrolabe] = useState<boolean>(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const composerInputRef = useRef<HTMLInputElement>(null);
@@ -126,6 +131,17 @@ export default function Home() {
       setInput("");
       setThinking(true);
 
+      const lowerText = text.toLowerCase();
+      const isOfferOrHaggle = /offer|silver|haggle|bid|price|buy|ware|counter|discount/.test(lowerText);
+      const isCheckout = /pay|invoice|checkout|settle|transfer|send coin|signature/.test(lowerText);
+      if (isCheckout) {
+        setIsProcessingCheckout(true);
+        setIsNegotiating(false);
+      } else if (isOfferOrHaggle) {
+        setIsNegotiating(true);
+        setIsProcessingCheckout(false);
+      }
+
       try {
         const res = await fetch("/api/agent", {
           method: "POST",
@@ -168,6 +184,12 @@ export default function Home() {
             }
             if (resObj?.payment) {
               loadWallet();
+              setIsProcessingCheckout(false);
+            }
+            if (typeof resObj?.roundsConsumed === "number") {
+              setNegotiationRound(Math.min(4, Math.max(1, (resObj.roundsConsumed as number) + 1)));
+            } else if (typeof resObj?.round === "number") {
+              setNegotiationRound(Math.min(4, Math.max(1, resObj.round as number)));
             }
           }
           // Refresh wares inventory to reflect new rounds, status, or reservations
@@ -190,6 +212,8 @@ export default function Home() {
         ]);
       } finally {
         setThinking(false);
+        setIsNegotiating(false);
+        setIsProcessingCheckout(false);
       }
     },
     [messages, thinking, loadWallet]
@@ -268,16 +292,39 @@ export default function Home() {
               </div>
 
               <CardAction>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setMessages([])}
-                  disabled={messages.length === 0 || thinking}
-                  className="font-mono text-xs text-muted-foreground hover:text-parchment uppercase h-7 px-2"
-                  aria-label="Clear session history"
-                >
-                  <RotateCcw className="size-3 mr-1.5" /> Clear
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAstrolabe((prev) => !prev)}
+                    className={cn(
+                      "font-mono text-xs uppercase h-7 px-2",
+                      showAstrolabe
+                        ? "text-brass bg-brass/10 border border-brass/40"
+                        : "text-muted-foreground hover:text-parchment"
+                    )}
+                    aria-label={showAstrolabe ? "Hide 3D Astrolabe" : "View 3D Astrolabe"}
+                    title="Toggle 3D Cybernetic Astrolabe & Reactive HUD"
+                  >
+                    <Compass className="size-3 mr-1.5" />
+                    <span className="hidden sm:inline">{showAstrolabe ? "Hide HUD" : "Astrolabe HUD"}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setMessages([]);
+                      setNegotiationRound(1);
+                      setIsNegotiating(false);
+                      setIsProcessingCheckout(false);
+                    }}
+                    disabled={messages.length === 0 || thinking}
+                    className="font-mono text-xs text-muted-foreground hover:text-parchment uppercase h-7 px-2"
+                    aria-label="Clear session history"
+                  >
+                    <RotateCcw className="size-3 mr-1.5" /> Clear
+                  </Button>
+                </div>
               </CardAction>
             </div>
           </CardHeader>
@@ -291,6 +338,19 @@ export default function Home() {
             />
           </div>
 
+          {/* Collapsible 3D Cybernetic Astrolabe & Reactive HUD */}
+          {showAstrolabe && messages.length > 0 && (
+            <div className="relative z-10 border-b border-border/70 p-2 bg-void/70">
+              <BazaarAstrolabe3D
+                mood={bazaarMood}
+                round={negotiationRound}
+                isNegotiating={isNegotiating || thinking}
+                isProcessingCheckout={isProcessingCheckout}
+                size="sm"
+              />
+            </div>
+          )}
+
           {/* Scrollable Conversation Feed */}
           <ScrollArea className="relative z-10 min-h-0 flex-1 px-4 py-4">
             <div className="flex flex-col gap-5">
@@ -299,6 +359,10 @@ export default function Home() {
                   ready={ready}
                   walletCreated={Boolean(wallet?.address)}
                   onSelectPrompt={(p) => send(p)}
+                  mood={bazaarMood}
+                  round={negotiationRound}
+                  isNegotiating={isNegotiating || thinking}
+                  isProcessingCheckout={isProcessingCheckout}
                 />
               )}
 

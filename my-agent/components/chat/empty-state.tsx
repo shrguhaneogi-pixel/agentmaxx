@@ -1,11 +1,17 @@
 "use client";
 
-import { ShoppingBag, Sparkles, Compass, Coins, CloudSun } from "lucide-react";
+import { ShoppingBag, Compass, Coins, CloudSun } from "lucide-react";
+import { BazaarAstrolabe3D } from "@/components/astrolabe";
+import type { AstrolabeMood } from "@/components/astrolabe/types";
 
 interface EmptyStateProps {
   ready: boolean;
   walletCreated: boolean;
   onSelectPrompt: (prompt: string) => void;
+  mood?: AstrolabeMood;
+  round?: number;
+  isNegotiating?: boolean;
+  isProcessingCheckout?: boolean;
 }
 
 const CATEGORIZED_PROMPTS = [
@@ -37,89 +43,26 @@ const CATEGORIZED_PROMPTS = [
   },
 ];
 
-export function EmptyState({ ready, walletCreated, onSelectPrompt }: EmptyStateProps) {
+export function EmptyState({
+  ready,
+  walletCreated,
+  onSelectPrompt,
+  mood = "neutral",
+  round = 1,
+  isNegotiating = false,
+  isProcessingCheckout = false,
+}: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center gap-6 py-8 px-4 text-center">
-      {/* Visual Anchor: Precision Brass Astrolabe & Merchant Reticle */}
-      <div className="relative flex size-28 items-center justify-center border border-brass/50 bg-card/90 shadow-[0_0_35px_rgba(197,160,89,0.15)]">
-        {/* Reticle Corner Marks */}
-        <span className="absolute -top-1 -left-1 size-2.5 border-t-2 border-l-2 border-brass" />
-        <span className="absolute -top-1 -right-1 size-2.5 border-t-2 border-r-2 border-brass" />
-        <span className="absolute -bottom-1 -left-1 size-2.5 border-b-2 border-l-2 border-brass" />
-        <span className="absolute -bottom-1 -right-1 size-2.5 border-b-2 border-r-2 border-brass" />
-
-        {/* SVG Brass Astrolabe Visual Anchor */}
-        <div className="relative flex size-22 items-center justify-center">
-          {/* Outer Degree Ring */}
-          <svg
-            viewBox="0 0 100 100"
-            className="absolute inset-0 size-full animate-[spin_60s_linear_infinite] opacity-80"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="46"
-              fill="none"
-              stroke="#C5A059"
-              strokeWidth="1"
-              strokeDasharray="2 3"
-              opacity="0.5"
-            />
-            <circle
-              cx="50"
-              cy="50"
-              r="42"
-              fill="none"
-              stroke="#C5A059"
-              strokeWidth="0.75"
-              opacity="0.7"
-            />
-            {/* Cardinal ticks */}
-            <line x1="50" y1="2" x2="50" y2="8" stroke="#C5A059" strokeWidth="1.5" />
-            <line x1="50" y1="92" x2="50" y2="98" stroke="#C5A059" strokeWidth="1.5" />
-            <line x1="2" y1="50" x2="8" y2="50" stroke="#C5A059" strokeWidth="1.5" />
-            <line x1="92" y1="50" x2="98" y2="50" stroke="#C5A059" strokeWidth="1.5" />
-          </svg>
-
-          {/* Counter-Rotating Celestial Rete Ring */}
-          <svg
-            viewBox="0 0 100 100"
-            className="absolute inset-0 size-full animate-[spin_35s_linear_infinite_reverse] opacity-70"
-            aria-hidden="true"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="30"
-              fill="none"
-              stroke="#DFC27D"
-              strokeWidth="0.8"
-              strokeDasharray="4 4"
-            />
-            <ellipse
-              cx="50"
-              cy="42"
-              rx="20"
-              ry="14"
-              fill="none"
-              stroke="#DFC27D"
-              strokeWidth="0.7"
-              opacity="0.6"
-            />
-            {/* Celestial stars / pointers */}
-            <circle cx="50" cy="28" r="1.5" fill="#C5A059" />
-            <circle cx="68" cy="48" r="1.5" fill="#C5A059" />
-            <circle cx="34" cy="54" r="1.5" fill="#C5A059" />
-          </svg>
-
-          {/* Central Astrolabe Alidade Cross & Core */}
-          <div className="relative flex size-10 items-center justify-center border border-brass bg-crimson/50 shadow-[0_0_15px_rgba(197,160,89,0.35)]">
-            <span className="font-serif text-[10px] font-bold text-brass select-none">
-              MRZB
-            </span>
-          </div>
-        </div>
+    <div className="flex flex-col items-center justify-center gap-6 py-4 px-2 text-center">
+      {/* Visual Anchor: Cybernetic Bazaar Astrolabe & Reactive HUD */}
+      <div className="w-full max-w-lg mx-auto">
+        <BazaarAstrolabe3D
+          mood={mood}
+          round={round}
+          isNegotiating={isNegotiating}
+          isProcessingCheckout={isProcessingCheckout}
+          size="sm"
+        />
       </div>
 
       {/* Main Headline & Context */}
