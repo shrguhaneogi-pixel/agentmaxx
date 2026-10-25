@@ -654,6 +654,11 @@ export function verifyBuyerConfirmation(
       "goods",
       "one",
       "silver",
+      "invoice",
+      "the invoice",
+      "and pay the invoice",
+      "pay the invoice",
+      "pay",
     ]);
     if (
       !nonItemWords.has(rawTarget) &&
