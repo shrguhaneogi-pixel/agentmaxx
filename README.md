@@ -14,7 +14,7 @@
 [![Solidity 0.8.24](https://img.shields.io/badge/Solidity-0.8.24_(Cancun)-363636?style=flat-square&logo=solidity)](https://soliditylang.org/)
 [![Network Base Sepolia](https://img.shields.io/badge/Network-Base_Sepolia_(84532)-0052FF?style=flat-square&logo=coinbase)](https://sepolia.basescan.org/)
 [![Automated Tests](https://img.shields.io/badge/Tests-69%2F69_Passing-10B981?style=flat-square&logo=checkmarx)](https://nodejs.org/api/test.html)
-[![Hacktoberfest 2026](https://img.shields.io/badge/Hacktoberfest-2026_Ready-7A1022?style=flat-square&logo=hacktoberfest)](./CONTRIBUTING.md)
+[![Agentmaxxing](https://img.shields.io/badge/Hacktoberfest-2026_Ready-7A1022?style=flat-square&logo=agentmaxxing)](./CONTRIBUTING.md)
 [![License MIT](https://img.shields.io/badge/License-MIT-C5A059?style=flat-square&labelColor=180D11)](./LICENSE)
 
 > *"Welcome, traveler, to the Grand Bazaar of Nishapur! I am Marzban—purveyor of celestial relics, guardian of confidential reserve floors, and humble servant of honest silver. Inquire of the stars, haggle for the legendary Brass Astrolabe, or test your wit against my stall. But heed this counsel: insult my wares with a pittance, and you shall taste an unyielding counter-offer!"*
