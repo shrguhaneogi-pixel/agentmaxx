@@ -113,7 +113,7 @@ export function ToolsPanel({ tools, onSelectPrompt }: ToolsPanelProps) {
   });
 
   return (
-    <Card className="bazaar-border border border-border/80 bg-card/95 shadow-xl">
+    <Card className="bazaar-border border border-[#C5A059]/30 bg-card/95 shadow-xl">
       <CardHeader className="border-b border-border/40 pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
