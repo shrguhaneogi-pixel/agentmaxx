@@ -1,6 +1,6 @@
 # Contributing to Marzban (Agentmaxx)
 
-Welcome, traveler and open-source engineer! We are thrilled you want to contribute to **Marzban: The Agentic Bazaar Merchant**. This repository is actively participating in **Hacktoberfest 2026** as a premier open-source AI agent and Web3 framework.
+Welcome, traveler and open-source engineer! We are thrilled you want to contribute to **Marzban: The Agentic Bazaar Merchant**. This repository is actively participating in **RISE-IN Agentmaxxing** as a premier open-source AI agent and Web3 framework.
 
 Whether you are implementing new agent tools, hardening cryptographic settlement, optimizing UI responsiveness, or enhancing telemetry, this guide details our architecture, coding conventions, testing protocols, and GitOps standards.
 
@@ -88,7 +88,7 @@ npm run build
 
 ---
 
-## 🎃 Hacktoberfest 2026 Contribution Opportunities
+## 🎃 Agentmaxxing 2026 Contribution Opportunities
 
 We welcome high-quality contributions in the following areas:
 
@@ -125,7 +125,7 @@ Follow atomic, Conventional Commits:
 Branch naming:
 - `feature/<short-description>`
 - `fix/<short-description>`
-- `hacktoberfest/<issue-id>-<short-description>`
+- `agentmaxxing/<issue-id>-<short-description>`
 
 ---
 
