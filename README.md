@@ -6,14 +6,14 @@
 
 **Autonomous Street-Market Merchant Agent with Multi-Round Negotiation, EIP-712 Cryptographic Gating, and Base Sepolia On-Chain Escrow Settlement**
 
-[![Next.js 16](https://img.shields.io/badge/Next.js-16.4.3_(Patched)-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![Next.js 16](https://img.shields.io/badge/Next.js-16.4.3-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React 19](https://img.shields.io/badge/React-19.3.0-149eca?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript 5.9](https://img.shields.io/badge/TypeScript-5.9.3-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Google Gen AI](https://img.shields.io/badge/@google/genai-2.24.0-4285F4?style=flat-square&logo=google)](https://www.npmjs.com/package/@google/genai)
 [![Viem v2](https://img.shields.io/badge/viem-2.56.9-2030D8?style=flat-square&logo=ethereum)](https://viem.sh/)
 [![Solidity 0.8.24](https://img.shields.io/badge/Solidity-0.8.24_(Cancun)-363636?style=flat-square&logo=solidity)](https://soliditylang.org/)
 [![Network Base Sepolia](https://img.shields.io/badge/Network-Base_Sepolia_(84532)-0052FF?style=flat-square&logo=coinbase)](https://sepolia.basescan.org/)
-[![Automated Tests](https://img.shields.io/badge/Tests-69%2F69_Passing-10B981?style=flat-square&logo=checkmarx)](https://nodejs.org/api/test.html)
+[![Automated Tests](https://img.shields.io/badge/Tests-86%2F86_Passing-10B981?style=flat-square&logo=checkmarx)](https://nodejs.org/api/test.html)
 [![Agentmaxxing](https://img.shields.io/badge/Agentmaxxing_Ready-7A1022?style=flat-square&logo=agentmaxxing)](./CONTRIBUTING.md)
 [![License MIT](https://img.shields.io/badge/License-MIT-C5A059?style=flat-square&labelColor=180D11)](./LICENSE)
 
@@ -21,22 +21,45 @@
 
 <br>
 
-<video width="100%" max-width="840px" controls preload="metadata" poster="https://img.shields.io/badge/▶_PLAY_DEMO-Marzban_Agentic_Bazaar_Walkthrough-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915">
+### 🎬 Video Demonstrations
+
+#### 📹 Demo 01: Theatrical Bazaar Walkthrough & Multi-Round Negotiation (`marzban_demo01.webm`)
+
+<video width="100%" max-width="840px" controls preload="metadata" poster="https://img.shields.io/badge/▶_PLAY_DEMO_01-Marzban_Bazaar_Walkthrough-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915">
   <source src="https://drive.google.com/uc?export=download&id=1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF" type="video/webm">
   Your browser does not support the video tag.
 </video>
 
-<br>
-
 <p align="center">
   <a href="https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/preview" target="_blank" rel="noopener noreferrer">
-    <img src="https://img.shields.io/badge/▶_LAUNCH_DEMO_VIDEO_PLAYER-marzban__demo01.webm-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915" alt="Launch Demo Video Player">
+    <img src="https://img.shields.io/badge/▶_LAUNCH_DEMO_PLAYER-marzban__demo01.webm-D3F65A?style=for-the-badge&logo=googleplay&logoColor=10110F&labelColor=171915" alt="Launch Demo 01 Video Player">
   </a>
   <a href="https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/view?usp=sharing" target="_blank" rel="noopener noreferrer">
     <img src="https://img.shields.io/badge/Google_Drive-Open_Standalone_Player-4285F4?style=for-the-badge&logo=googledrive&logoColor=white&labelColor=10110F" alt="Open Standalone Player">
   </a>
   <a href="https://drive.google.com/uc?export=download&id=1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF" target="_blank" rel="noopener noreferrer">
     <img src="https://img.shields.io/badge/Stream_/_Download-WebM_HD-10B981?style=for-the-badge&logo=webrtc&logoColor=white&labelColor=10110F" alt="Direct Stream Download">
+  </a>
+</p>
+
+<br>
+
+#### 📹 Demo 02: End-to-End Autonomous Crypto & Browser Tool Execution (`marzban_demo02.mp4`)
+
+<video width="100%" max-width="840px" controls preload="metadata" poster="https://img.shields.io/badge/▶_PLAY_DEMO_02-Autonomous_Crypto_&_Tool_Calling-6366F1?style=for-the-badge&logo=googleplay&logoColor=white&labelColor=171915">
+  <source src="https://drive.google.com/uc?export=download&id=1JGINOwl82ZkrktQPI_XH0wXvoc8DQb_P" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<p align="center">
+  <a href="https://drive.google.com/file/d/1JGINOwl82ZkrktQPI_XH0wXvoc8DQb_P/preview" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/▶_LAUNCH_DEMO_PLAYER-marzban__demo02.mp4-6366F1?style=for-the-badge&logo=googleplay&logoColor=white&labelColor=10110F" alt="Launch Demo 02 Video Player">
+  </a>
+  <a href="https://drive.google.com/file/d/1JGINOwl82ZkrktQPI_XH0wXvoc8DQb_P/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Google_Drive-Open_Standalone_Player-4285F4?style=for-the-badge&logo=googledrive&logoColor=white&labelColor=10110F" alt="Open Standalone Player">
+  </a>
+  <a href="https://drive.google.com/uc?export=download&id=1JGINOwl82ZkrktQPI_XH0wXvoc8DQb_P" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/Stream_/_Download-MP4_HD-10B981?style=for-the-badge&logo=video&logoColor=white&labelColor=10110F" alt="Direct Stream Download">
   </a>
 </p>
 
@@ -51,6 +74,8 @@
 - [⚡ Tech Stack & Verified Versions](#-tech-stack--verified-versions)
 - [🛠️ Capabilities & The 9-Tool Matrix](#️-capabilities--the-9-tool-matrix)
 - [🧠 AI Model Configuration & Switching](#-ai-model-configuration--switching)
+- [🛡️ Serverless Zero-504 Timeout Architecture](#️-serverless-zero-504-timeout-architecture)
+- [🤖 E2E Browser Automation & Verification Suite](#-e2e-browser-automation--verification-suite)
 - [🚀 Environment Setup & Local Development](#-environment-setup--local-development)
   - [1. Clone & Install Dependencies](#1-clone--install-dependencies)
   - [2. Configure Environment Variables](#2-configure-environment-variables)
@@ -62,6 +87,8 @@
   - [2. Distributed Replay Protection Blocks](#2-distributed-replay-protection-blocks)
   - [3. Wallet Filesystem & Serverless EROFS Errors](#3-wallet-filesystem--serverless-erofs-errors)
   - [4. Agent & LLM Provider Operational Errors](#4-agent--llm-provider-operational-errors)
+- [🎨 Marzban Bazaar UI/UX Transformation](#-marzban-bazaar-uiux-transformation)
+- [📊 Observability & Telemetry Architecture](#-observability--telemetry-architecture)
 - [📜 License](#-license)
 
 ---
@@ -96,11 +123,11 @@ flowchart TD
         
         Gate -->|On-Chain Mode| ViemClient[Viem v2 Wallet & Public Clients]
         ViemClient -->|settlePayment p, sig| EscrowContract[BazaarEscrow.sol on Base Sepolia]
-        EscrowContract -->|Emit PaymentSettled| BlockFinality[waitForTransactionReceipt]
+        EscrowContract -->|Emit PaymentSettled| BlockFinality[Optimistic Settlement / waitForTransactionReceipt]
     end
 
     CryptoOff -->|HTTP 200 + Receipt| UI
-    BlockFinality -->|txHash + Gas Used + Receipt| UI
+    BlockFinality -->|txHash + Receipt + State Lock| UI
 ```
 
 ### Core Architectural Pillars
@@ -117,7 +144,7 @@ flowchart TD
    - Disambiguates multi-deal conversations, validates mentioned prices, and detects hesitancy, questions, or dissents before any payment tool executes.
 4. **Dual Settlement Protocol (Off-Chain x402 & On-Chain Escrow)**:
    - **Off-Chain**: HTTP 402 challenge/response using EIP-712 typed structured data signing (`Payment(address from,address to,string amount,string asset,string resource,string nonce,uint256 deadline)`), validated by atomic distributed nonce tracking (`SET NX EX`).
-   - **On-Chain**: Solidity escrow smart contract (`contracts/BazaarEscrow.sol`) deployed to **Base Sepolia (Chain ID: 84532)** verifying signatures, preventing replay attacks via `consumedNonces`, transferring native ETH, and awaiting EVM block finality.
+   - **On-Chain**: Solidity escrow smart contract (`contracts/BazaarEscrow.sol`) deployed to **Base Sepolia (Chain ID: 84532)** verifying signatures, preventing replay attacks via `consumedNonces`, transferring native ETH, and emitting verifiable on-chain event logs.
 
 ---
 
@@ -129,6 +156,7 @@ flowchart TD
 | **Unauthorized Autonomous Spending** | Agents initiate financial transfers based on ambiguous user prompts (e.g., *"What would it cost?"*). | **Conservative Confirmation Gate**: Requires affirmative intent in the active conversation turn, filters out dissents/questions, checks deal IDs, and validates agreed prices before checkout unlocks. |
 | **Payment Replay & Signature Theft** | EIP-191 message signatures can be intercepted and replayed repeatedly to drain merchant inventory or trigger duplicate orders. | **EIP-712 + Atomic Nonce Locks**: All authorizations are domain-separated (Chain ID 84532) with a 5-minute deadline and single-use cryptographic UUID nonces guarded by Upstash Redis `SET NX EX` and on-chain nonce registries. |
 | **Serverless EVM Wallet Crashes** | Next.js serverless runtimes (e.g., Vercel AWS Lambda) enforce a read-only filesystem (`EROFS`), crashing agents trying to persist `.agent-wallet.json`. | **Multi-Tiered Ephemeral Storage**: Seamlessly loads `WALLET_PRIVATE_KEY` from env, with fallbacks to `os.tmpdir()` and in-memory key stores, preventing serverless crashes. |
+| **Serverless 504 Timeouts** | Blocking EVM block finality and multi-step ReAct loops exceed the 10s/15s proxy limit. | **Circuit Breakers & Optimistic Settlement**: ReAct loop capped with 45s hard circuit breaker, 4s fetch timeouts with AbortSignals, and non-blocking background receipt settlement. |
 
 ---
 
@@ -136,7 +164,7 @@ flowchart TD
 
 All dependencies have been statically audited from `package.json` and verified for Node.js 20+ compatibility:
 
-- **Framework**: [Next.js](https://nextjs.org/) `16.4.0` (resolved from `^16.3.6`) with Webpack build optimization.
+- **Framework**: [Next.js](https://nextjs.org/) `16.4.3` (App Router) with Webpack build optimization.
 - **UI & React Runtime**: [React](https://react.dev/) `^19.3.0` & `react-dom` `^19.3.0`.
 - **Language**: [TypeScript](https://www.typescriptlang.org/) `^5.9.3` with strict type checking (`tsc --noEmit`).
 - **AI / LLM SDK**: [@google/genai](https://www.npmjs.com/package/@google/genai) `^2.24.0` (Google Gen AI SDK for Gemini).
@@ -145,7 +173,8 @@ All dependencies have been statically audited from `package.json` and verified f
 - **Smart Contract Tooling**: [Hardhat](https://hardhat.org/) `^3.0.0` with Cancun EVM target and solc `0.8.24`.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) `^4.3.3` with `@tailwindcss/postcss` `^4.3.3` and `tw-animate-css` `^1.4.0`.
 - **Icons & Primitives**: [Lucide React](https://lucide.dev/) `^1.48.0` & [@base-ui/react](https://base-ui.com/) `^1.8.0`.
-- **Test Harness**: Node.js Native Test Runner with [Jiti](https://github.com/unjs/jiti) `^2.4.2` TypeScript compilation.
+- **3D Graphics & Canvas**: [Three.js](https://threejs.org/) `^0.186.1` & [@react-three/fiber](https://r3f.docs.pmnd.rs/) `^9.8.2`.
+- **Test Harness**: Node.js Native Test Runner with [Jiti](https://github.com/unjs/jiti) `^2.4.2` TypeScript compilation (**86/86 Passing**).
 
 ---
 
@@ -172,20 +201,69 @@ Marzban possesses 9 deterministic tools registered in [`my-agent/agent/tools.ts`
 Marzban uses the official **Google Gen AI SDK** (`@google/genai`) to interact with Gemini models.
 
 ### Default Model
-The application defaults to:
+The application dynamically selects the model via:
 ```typescript
 export const MODEL = process.env.GEMINI_MODEL || "gemini-flash-latest";
 ```
 
 ### Supported Models & Switching
-You can dynamically switch models without code changes by setting `GEMINI_MODEL` in your `.env` file or environment variables:
+You can switch models without code changes by setting `GEMINI_MODEL` in your `.env` file or hosting dashboard:
 
 | Model Identifier | Latency Profile | Recommended Use Case |
 | :--- | :---: | :--- |
-| `gemini-flash-latest` *(Default)* | **Ultra-Low** (~400ms) | Production default for rapid conversational haggling and immediate tool execution. |
-| `gemini-2.5-flash` | **Low** (~600ms) | Enhanced reasoning and tighter schema validation adherence. |
-| `gemini-1.5-flash-latest` | **Low** (~500ms) | Legacy high-throughput flash model. |
-| `gemini-1.5-pro-latest` | **Medium** (~1.2s) | Deep contextual multi-turn reasoning and complex roleplay nuances. |
+| `gemini-flash-lite-latest` | **Ultra-Low** (~1.8s round-trip) | **Recommended for serverless (Vercel)**: Rapid conversational turns, instant tool calling, and zero risk of proxy timeouts. |
+| `gemini-flash-latest` | **Low** (~2.5s) | Standard default for rich conversational haggling and accurate multi-step function calling. |
+| `gemini-2.5-flash` | **Low-Medium** (~3.0s) | Enhanced reasoning and tighter schema validation adherence. |
+| `gemini-1.5-pro-latest` | **Medium** (~5.0s) | Deep contextual multi-turn reasoning and complex roleplay nuances. |
+
+---
+
+## 🛡️ Serverless Zero-504 Timeout Architecture
+
+To guarantee high stability in serverless environments (e.g. Vercel AWS Lambda regions like `iad1` and `bom1`), Marzban applies strict timeouts and decoupling:
+
+1. **45-Second ReAct Loop Circuit Breaker:**
+   - Capped at `ABORT_TIMEOUT_MS = 45000` inside `agent/agent.ts`.
+   - Prevents recursive LLM function-calling loops from exhausting serverless execution limits.
+2. **Optimistic On-Chain Settlement:**
+   - When on-chain transactions take longer than 8 seconds, `pay_invoice` returns an optimistic pending receipt with the broadcast `txHash` and updates state to `pending_network_confirmation` rather than hanging the HTTP connection.
+3. **Fetch Timeout Signals:**
+   - All outgoing HTTP requests (e.g., weather API, currency, country info) utilize `AbortController` signals with a 4000ms safety timeout and fallback mock data.
+4. **App Router Route Configuration:**
+   - All API routes specify `export const maxDuration = 60;` and `export const dynamic = 'force-dynamic'` to prevent static caching of nonces or deadlines.
+
+---
+
+## 🤖 E2E Browser Automation & Verification Suite
+
+Marzban includes a zero-dependency Chrome DevTools Protocol (CDP) automated test suite (`scripts/e2e-browser-automation.mjs`) and background daemon (`scripts/chrome-daemon.mjs`) that navigates the live application, clicks buttons, types in chat, and asserts visual and cryptographic state in the DOM.
+
+### 6-Step Verification Workflow
+
+```mermaid
+flowchart LR
+    S1[1. Generate Coin Pouch] --> S2[2. Query get_my_wallet]
+    S2 --> S3[3. Query list_wares]
+    S3 --> S4[4. Haggle 85 Silver]
+    S4 --> S5[5. EIP-712 pay_invoice]
+    S5 --> S6[6. Stamped get_receipt]
+```
+
+1. **Autonomous Wallet Generation:** Triggers `[GENERATE COIN POUCH]` in the Setup panel; verifies valid `0x...` Base Sepolia address displayed.
+2. **On-Chain Balance Query (`get_my_wallet`):** Asks *"What is my agent's wallet address and current ETH balance?"*; asserts public address and numeric balance.
+3. **Inventory Discovery (`list_wares`):** Asks *"Show me what wares you have for sale in the bazaar."*; asserts 6 catalog items returned including the Brass Astrolabe.
+4. **Deterministic Negotiation (`haggle_offer`):** Offers *"I offer 85 silver for the Brass Astrolabe."*; asserts Marzban accepts and reserves the item.
+5. **EIP-712 Cryptographic Settlement (`pay_invoice`):** Confirms *"I confirm. Proceed to checkout and pay the invoice."*; verifies signed EIP-712 payload and 0.01 USDC x402 payment.
+6. **Receipt Retrieval (`get_receipt`):** Stamped immutable receipt with TxHash and updates UI item card to **`CLAIMED / SOLD`**.
+
+### Captured Evidence Screenshots
+
+- **Generated Coin Pouch**: [`my-agent/public/browser-step1-wallet.png`](./my-agent/public/browser-step1-wallet.png)
+- **On-Chain Balance**: [`my-agent/public/browser-step2-balance.png`](./my-agent/public/browser-step2-balance.png)
+- **Bazaar Catalog**: [`my-agent/public/browser-step3-wares.png`](./my-agent/public/browser-step3-wares.png)
+- **Agreed Bargain**: [`my-agent/public/browser-step4-haggle.png`](./my-agent/public/browser-step4-haggle.png)
+- **Final Settled Receipt**: [`my-agent/public/browser-step5-receipt.png`](./my-agent/public/browser-step5-receipt.png)
+- **Full DOM Panoramic Proof**: [`my-agent/public/e2e-demo-receipt.png`](./my-agent/public/e2e-demo-receipt.png)
 
 ---
 
@@ -209,7 +287,7 @@ cd ..
 
 ### 2. Configure Environment Variables
 
-Create a `.env` file inside the `my-agent/` directory (or use `.env.local`):
+Create a `.env` file inside the `my-agent/` directory:
 
 ```bash
 # ==============================================================================
@@ -220,8 +298,8 @@ Create a `.env` file inside the `my-agent/` directory (or use `.env.local`):
 # Get a key at: https://aistudio.google.com/
 GEMINI_API_KEY="AIzaSy..."
 
-# 2. AI Model Selection (OPTIONAL, Default: gemini-flash-latest)
-GEMINI_MODEL="gemini-flash-latest"
+# 2. AI Model Selection (OPTIONAL, Default: gemini-flash-latest or gemini-flash-lite-latest)
+GEMINI_MODEL="gemini-flash-lite-latest"
 
 # 3. Agent EVM Wallet Private Key (OPTIONAL)
 # 64-character hex key (with or without 0x prefix).
@@ -229,7 +307,6 @@ GEMINI_MODEL="gemini-flash-latest"
 WALLET_PRIVATE_KEY="0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
 
 # 4. Base Sepolia Verifying Contract Address (OPTIONAL)
-# Defaults to 0x000000000000000000000000000000000000dEaD until deployed.
 PAYMENT_VERIFYING_CONTRACT="0x000000000000000000000000000000000000dEaD"
 NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS="0x000000000000000000000000000000000000dEaD"
 
@@ -237,7 +314,6 @@ NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS="0x000000000000000000000000000000000000dEaD"
 BASE_SEPOLIA_RPC_URL="https://sepolia.base.org"
 
 # 6. Upstash Redis Distributed Replay Protection (OPTIONAL)
-# If omitted, an in-memory Map store is used automatically.
 UPSTASH_REDIS_REST_URL=""
 UPSTASH_REDIS_REST_TOKEN=""
 
@@ -257,12 +333,10 @@ npm run compile
 npx hardhat run scripts/deploy-escrow.js --network baseSepolia
 ```
 
-*Upon deployment, copy the logged contract address into `PAYMENT_VERIFYING_CONTRACT` and `NEXT_PUBLIC_ESCROW_CONTRACT_ADDRESS`.*
-
 ### 4. Run Local Development Server
 
 ```bash
-# Start Next.js development server from root
+# Start Next.js server from root
 npm run dev
 
 # Open http://localhost:3000 in your browser
@@ -274,8 +348,11 @@ npm run dev
 # Run strict TypeScript type-checking (Zero errors mandate)
 npm run type-check
 
-# Run complete automated test suite (62 tests across 16 suites)
+# Run complete automated test suite (86 tests across 22 suites)
 npm test
+
+# Run deterministic E2E browser automation suite
+node scripts/e2e-browser-automation.mjs
 
 # Run Next.js production build check
 npm run build
@@ -313,7 +390,7 @@ npm run build
 | Error Manifestation | Root Cause | Exact Console / HTTP Output | Remediation Step |
 | :--- | :--- | :--- | :--- |
 | **Missing API Key** | `GEMINI_API_KEY` was not exported or is empty in `.env`. | `HTTP 500 Internal Server Error`<br>`{"error": "GEMINI_API_KEY is not configured. Set GEMINI_API_KEY in your environment variables or .env file."}` | Obtain an API key from [Google AI Studio](https://aistudio.google.com/) and define `GEMINI_API_KEY="AIzaSy..."` in `.env`. |
-| **503 Service Unavailable** | Google Gen AI upstream API rate limit or transient regional outage. | `GoogleGenAIError: [503 Service Unavailable] The model is overloaded. Please try again later.` | Configure `GEMINI_MODEL="gemini-flash-latest"` for the highest quota availability. The agent loop automatically aborts safely without corrupting deal states. |
+| **503 Service Unavailable** | Google Gen AI upstream API rate limit or transient regional outage. | `GoogleGenAIError: [503 Service Unavailable] The model is overloaded. Please try again later.` | Configure `GEMINI_MODEL="gemini-flash-lite-latest"` or `"gemini-flash-latest"` for highest quota availability. The agent loop automatically aborts safely without corrupting deal states. |
 | **Safety Filter Block** | Gemini blocked generation due to safety thresholds triggered by prompt text. | `finishReason: "SAFETY"` / `Candidate blocked by safety settings` | Marzban's system prompt enforces a respectful merchant persona. Ensure test inputs do not contain disallowed content. |
 | **Buyer Authorization Denied** | The agent attempted to call `pay_invoice` without clear affirmative consent in the current turn. | `{"error": "Payment authorization denied: Buyer indicated hesitation, dissent, refusal, or cancellation in the current turn.", "dealId": "deal-xxx", "buyerConfirmationRequired": true}` | The buyer must explicitly respond with affirmative consent (e.g., *"Yes, proceed to checkout"* or *"Deal, let's pay"*) in the current conversation turn. |
 
@@ -337,7 +414,7 @@ The user interface has transitioned from a plain terminal console into an immers
   - Performance: Direct compositor transforms (`translate3d`), zero React re-renders on mousemove.
   - Accessibility: Automatically disabled on touchscreens (`pointer: coarse`) and when `prefers-reduced-motion` is active; `pointer-events: none` ensures zero interference with clicks or selections.
 - **Atmospheric 3D Backdrop (`components/bazaar-spline-environment.tsx`):**
-  - Optional Spline 3D scene support (`NEXT_PUBLIC_SPLINE_SCENE_URL`) with seamless procedural canvas/SVG fallback (floating brass embers, glowing lantern vignettes, rotating celestial astrolabe).
+  - Spline 3D scene support with seamless procedural canvas fallback (floating brass embers, glowing lantern vignettes, rotating celestial astrolabe).
 
 ---
 

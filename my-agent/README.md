@@ -1,3 +1,14 @@
+# Marzban: The Agentic Bazaar Merchant (Frontend & Agent Core)
+
+> 📖 **Comprehensive Project Architecture & Smart Contract Guide:** Please see the [Main Project README](../README.md) for the complete 9-tool matrix, Base Sepolia escrow verification, and mathematical bargaining state machine.
+
+### 🎬 Video Demonstrations
+
+- **Demo 01 (Walkthrough & Bargaining - WebM):** [marzban_demo01.webm](https://drive.google.com/file/d/1Z3U4EBHxnbjpEluNluP2tZgWw0jQn_AF/view?usp=sharing)
+- **Demo 02 (Autonomous Crypto & Tool Calling - MP4):** [marzban_demo02.mp4](https://drive.google.com/file/d/1JGINOwl82ZkrktQPI_XH0wXvoc8DQb_P/view?usp=sharing)
+
+---
+
 # agentmaxxin
 
 A minimal Next.js template for building AI agents that call tools and pay for services with their own crypto wallet. The agent is powered by Google Gemini.
