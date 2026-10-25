@@ -1,0 +1,46 @@
+name: 🛠️ AI Agent Tool Proposal
+description: Propose or design a new autonomous tool adapter for Marzban (agent/tools.ts)
+title: "[TOOL PROPOSAL]: "
+labels: ["ai-agent", "tools", "hacktoberfest"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Marzban uses the Google Gen AI function calling schema for autonomous tool execution. Propose new tools that expand Marzban's capabilities!
+  - type: input
+    id: tool_name
+    attributes:
+      label: Proposed Tool Name
+      description: Snake_case name of the proposed tool.
+      placeholder: e.g. archive_receipt_ipfs
+    validations:
+      required: true
+  - type: dropdown
+    id: action_type
+    attributes:
+      label: Action Type
+      options:
+        - READ-ONLY (Retrieval / Query)
+        - STATE-CHANGING (Bazaar / On-Chain Effect)
+    validations:
+      required: true
+  - type: textarea
+    id: tool_description
+    attributes:
+      label: Tool Description for Model Dispatcher
+      description: How should the Gemini model understand when to call this tool?
+    validations:
+      required: true
+  - type: textarea
+    id: parameters_schema
+    attributes:
+      label: Parameters JSON Schema
+      description: Describe input arguments and validation requirements.
+      render: json
+  - type: textarea
+    id: safety_invariants
+    attributes:
+      label: Safety & Invariant Considerations
+      description: How does this tool prevent unauthorized fund transfer, secret leakage, or infinite execution loops?
+    validations:
+      required: true

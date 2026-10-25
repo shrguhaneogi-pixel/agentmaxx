@@ -1,0 +1,43 @@
+name: 💡 Feature Request
+description: Propose a new capability, enhancement, or architecture improvement
+title: "[FEATURE]: "
+labels: ["enhancement", "hacktoberfest"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement for Marzban! Check out existing open issues and discussions before submitting.
+  - type: input
+    id: title_summary
+    attributes:
+      label: Feature Summary
+      description: Concise summary of what you are proposing.
+      placeholder: e.g. Add ERC-20 payment settlement support
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Opportunity
+      description: Is your feature request related to a problem or limitation?
+      placeholder: "Current settlement only supports native testnet ETH..."
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution & Technical Approach
+      description: Detailed explanation of how this should be implemented.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Approaches Considered
+      description: Did you consider alternative libraries or patterns?
+  - type: checkboxes
+    id: hacktoberfest_readiness
+    attributes:
+      label: Hacktoberfest 2026 Participation
+      options:
+        - label: I am willing to submit a PR to implement this feature following the repository guidelines.
