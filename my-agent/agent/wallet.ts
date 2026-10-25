@@ -182,7 +182,12 @@ export interface PaymentExecutionResult {
 }
 
 /** Fetch a URL. If it asks for payment (402), sign an EIP-712 payment with the wallet and try again. */
-export async function payAndFetch(url: string, defaultBase = "http://localhost:3000"): Promise<PaymentExecutionResult> {
+export async function payAndFetch(
+  url: string,
+  defaultBase = "http://localhost:3000",
+  options?: { timeoutMs?: number }
+): Promise<PaymentExecutionResult> {
+  const timeoutMs = options?.timeoutMs ?? 5000;
   let resolvedUrl: string;
   let resource: string;
   try {
@@ -194,7 +199,16 @@ export async function payAndFetch(url: string, defaultBase = "http://localhost:3
     resource = url;
   }
 
-  const first = await fetch(resolvedUrl);
+  let first: Response;
+  try {
+    first = await fetch(resolvedUrl, { signal: AbortSignal.timeout(timeoutMs) });
+  } catch (err: unknown) {
+    if (err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError")) {
+      throw new Error(`Endpoint request timed out (${timeoutMs}ms limit). Aborted to prevent serverless timeout.`);
+    }
+    throw err;
+  }
+
   if (first.status !== 402) {
     if (!first.ok) throw new Error(`API request failed: ${first.status} ${first.statusText}`);
     const data: unknown = await first.json().catch(async () => {
@@ -235,7 +249,19 @@ export async function payAndFetch(url: string, defaultBase = "http://localhost:3
   const authorization: SignedPaymentAuthorization = { payment, signature };
   const header = Buffer.from(JSON.stringify(authorization)).toString("base64");
 
-  const paid = await fetch(resolvedUrl, { headers: { "X-PAYMENT": header } });
+  let paid: Response;
+  try {
+    paid = await fetch(resolvedUrl, {
+      headers: { "X-PAYMENT": header },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (err: unknown) {
+    if (err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError")) {
+      throw new Error(`Paid checkout request timed out (${timeoutMs}ms limit). Aborted to prevent serverless timeout.`);
+    }
+    throw err;
+  }
+
   const data: unknown = await paid.json().catch(async () => {
     const text = await paid.text().catch(() => "");
     return { error: text || `HTTP ${paid.status}` };
@@ -300,19 +326,22 @@ export interface OnChainSettlementOptions {
   walletClient?: any;
   deadlineSeconds?: number;
   nonce?: string;
+  confirmationTimeoutMs?: number;
 }
 
 export interface OnChainSettlementResult {
   success: boolean;
+  status: "confirmed" | "pending_network_confirmation";
   txHash: Hex;
-  blockNumber: bigint;
-  gasUsed: bigint;
+  blockNumber?: bigint;
+  gasUsed?: bigint;
   dealId: string;
   from: Address;
   to: Address;
   amount: string;
   asset: string;
   nonce: string;
+  message?: string;
   event?: {
     from: Address;
     to: Address;
@@ -328,8 +357,8 @@ export interface OnChainSettlementResult {
  * 1. Constructs typed EIP-712 structured data message.
  * 2. Cryptographically signs typed data using agent's wallet.
  * 3. Broadcasts settlePayment transaction via Viem walletClient.writeContract.
- * 4. Awaits block confirmation and finality via Viem publicClient.waitForTransactionReceipt.
- * 5. Parses PaymentSettled event log and returns confirmed transaction metrics.
+ * 4. Awaits block confirmation and finality via Viem publicClient.waitForTransactionReceipt with strict race timeout.
+ * 5. Parses PaymentSettled event log and returns confirmed or pending transaction metrics.
  */
 export async function executeOnChainSettlement(
   dealId: string,
@@ -410,10 +439,41 @@ export async function executeOnChainSettlement(
     value,
   });
 
-  // 6. Await block inclusion and finality
-  const receipt = await pubClient.waitForTransactionReceipt({ hash });
+  // 6. Await block inclusion with strict timeout (default 8s) to prevent serverless 504 proxy kill
+  const confirmationTimeoutMs = options?.confirmationTimeoutMs ?? 8000;
+  let timeoutTimer: NodeJS.Timeout | undefined;
 
-  if (receipt.status === "reverted") {
+  let receipt: any = null;
+  try {
+    receipt = await Promise.race([
+      pubClient.waitForTransactionReceipt({ hash }),
+      new Promise((_, reject) => {
+        timeoutTimer = setTimeout(() => reject(new Error("NETWORK_TIMEOUT")), confirmationTimeoutMs);
+      }),
+    ]);
+  } catch (err: unknown) {
+    if (err instanceof Error && err.message === "NETWORK_TIMEOUT") {
+      // Transaction was broadcast, but block confirmation timed out.
+      // Return pending_network_confirmation immediately to prevent 504 timeout.
+      return {
+        success: true,
+        status: "pending_network_confirmation",
+        txHash: hash,
+        dealId,
+        from: account.address,
+        to: payTo,
+        amount,
+        asset,
+        nonce,
+        message: `Transaction broadcasted to Base Sepolia (tx: ${hash}). Awaiting network confirmation.`,
+      };
+    }
+    throw err;
+  } finally {
+    if (timeoutTimer) clearTimeout(timeoutTimer);
+  }
+
+  if (receipt?.status === "reverted") {
     throw new Error(`Transaction reverted on-chain (tx: ${hash})`);
   }
 
@@ -423,7 +483,7 @@ export async function executeOnChainSettlement(
     const parsedLogs = parseEventLogs({
       abi: BazaarEscrowABI,
       eventName: "PaymentSettled",
-      logs: receipt.logs || [],
+      logs: receipt?.logs || [],
     });
     if (parsedLogs.length > 0) {
       settledEvent = parsedLogs[0].args;
@@ -434,9 +494,10 @@ export async function executeOnChainSettlement(
 
   return {
     success: true,
+    status: "confirmed",
     txHash: hash,
-    blockNumber: receipt.blockNumber ?? 0n,
-    gasUsed: receipt.gasUsed ?? 0n,
+    blockNumber: receipt?.blockNumber ?? 0n,
+    gasUsed: receipt?.gasUsed ?? 0n,
     dealId,
     from: account.address,
     to: payTo,

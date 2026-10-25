@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { createWallet, getWalletAddress, getWalletBalance } from "@/agent/wallet";
+import { createWallet, getWalletAddress, getWalletBalance } from "../../../agent/wallet";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 interface WalletResponse {
   address: string | null;

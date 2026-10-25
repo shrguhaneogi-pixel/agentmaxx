@@ -25,7 +25,7 @@ export interface TelemetrySpan {
   toolCallsCount: number;
   toolsInvoked: string[];
   retries: number;
-  status: "success" | "error" | "rate_limited" | "safety_blocked";
+  status: "success" | "error" | "rate_limited" | "safety_blocked" | "timeout_prevented";
   errorCategory?: string;
   settlementMilestone?:
     | "deal_created"

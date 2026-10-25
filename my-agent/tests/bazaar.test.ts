@@ -1,14 +1,21 @@
 import assert from "node:assert/strict";
+import http from "node:http";
 import { describe, it, beforeEach } from "node:test";
 import { NextRequest } from "next/server";
 import { keccak256, parseEther, toHex, verifyTypedData, type Hex } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { BazaarEscrowABI } from "../agent/abi/BazaarEscrow";
+import { runAgent } from "../agent/agent";
 import {
   createWallet,
   executeOnChainSettlement,
   getWalletAddress,
+  payAndFetch,
 } from "../agent/wallet";
+import * as agentRoute from "../app/api/agent/route";
+import * as checkoutRoute from "../app/api/bazaar/checkout/route";
+import * as walletRoute from "../app/api/wallet/route";
+import * as weatherRoute from "../app/api/weather/route";
 import {
   getEIP712Domain,
   EIP712_PAYMENT_TYPES,
@@ -1512,6 +1519,121 @@ describe("Marzban Bazaar Merchant Engine", () => {
       );
       assert.ok(settlePaymentEntry, "BazaarEscrow ABI must expose settlePayment");
       assert.equal(settlePaymentEntry.stateMutability, "payable");
+    });
+  });
+
+  describe("Serverless 504 Timeout Elimination & Stability Guards", () => {
+    it("handles on-chain confirmation timeout race with pending_network_confirmation fallback", async () => {
+      const haggleRes = haggle("brass-astrolabe", 100);
+      assert.equal(haggleRes.status, "accepted");
+      const dealId = haggleRes.dealId!;
+
+      createWallet();
+      const mockTxHash = "0xcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" as const;
+
+      const mockWalletClient = {
+        writeContract: async () => mockTxHash,
+      };
+
+      // Mock publicClient that simulates a slow RPC provider taking longer than the 50ms test timeout
+      const mockHangingPublicClient = {
+        waitForTransactionReceipt: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+          return {
+            status: "success",
+            transactionHash: mockTxHash,
+            blockNumber: 12345n,
+            gasUsed: 21000n,
+            logs: [],
+          };
+        },
+      };
+
+      const payTool = tools.find((t) => t.name === "pay_invoice")!;
+      const payRes: any = await payTool.run(
+        { dealId, mode: "on-chain" },
+        {
+          baseUrl: "http://localhost:3000",
+          confirmedDealId: dealId,
+          onChain: true,
+          onChainOptions: {
+            walletClient: mockWalletClient,
+            publicClient: mockHangingPublicClient,
+            confirmationTimeoutMs: 50, // Strict 50ms race timeout for test speed
+          },
+        }
+      );
+
+      // Verify that the tool immediately returns pending_network_confirmation without hanging
+      assert.equal(payRes.success, true);
+      assert.equal(payRes.status, "pending_network_confirmation");
+      assert.equal(payRes.txHash, mockTxHash);
+      assert.match(payRes.message, /Awaiting network confirmation on Base Sepolia/i);
+
+      // Verify deal completed with receipt and item sold
+      const deal = getDeal(dealId);
+      assert.equal(deal?.status, "completed");
+      assert.equal(deal?.paymentState, "completed");
+      const item = getItem("brass-astrolabe");
+      assert.equal(item?.availability, "sold");
+    });
+
+    it("enforces AbortSignal timeout on hanging fetch in payAndFetch", async () => {
+      const originalFetch = globalThis.fetch;
+      try {
+        globalThis.fetch = async (_input: any, init?: any) => {
+          return new Promise((_, reject) => {
+            if (init?.signal) {
+              init.signal.addEventListener("abort", () => {
+                const abortErr = new Error("The operation was aborted due to timeout");
+                abortErr.name = "TimeoutError";
+                reject(abortErr);
+              });
+            }
+          });
+        };
+
+        await assert.rejects(
+          async () => {
+            await payAndFetch("http://localhost:3000/api/hang", undefined, { timeoutMs: 30 });
+          },
+          /timed out/i,
+          "payAndFetch must abort and throw timeout error when endpoint hangs"
+        );
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("triggers ReAct loop 45-second circuit breaker to prevent serverless 504 timeout", async () => {
+      // Provide a turnStartTime that exceeds the 45-second threshold
+      const pastStartTime = Date.now() - 46000;
+      const history = [{ role: "user" as const, text: "Show me your wares." }];
+
+      const res = await runAgent(history, {
+        baseUrl: "http://localhost:3000",
+        turnStartTime: pastStartTime,
+      });
+
+      assert.ok(res.answer);
+      assert.match(res.answer, /heavy merchant traffic/i);
+      assert.match(res.answer, /pause our discussion briefly/i);
+      assert.equal(res.telemetry?.status, "timeout_prevented");
+      assert.equal(res.telemetry?.errorCategory, "REACT_LOOP_CIRCUIT_BREAKER");
+    });
+
+    it("verifies maxDuration = 60 and dynamic = 'force-dynamic' across all App Router routes", () => {
+      assert.equal(agentRoute.dynamic, "force-dynamic");
+      assert.equal(agentRoute.maxDuration, 60);
+
+      assert.equal(checkoutRoute.dynamic, "force-dynamic");
+      assert.equal(checkoutRoute.maxDuration, 60);
+
+      assert.equal(walletRoute.dynamic, "force-dynamic");
+      assert.equal(walletRoute.maxDuration, 60);
+
+      assert.equal(weatherRoute.dynamic, "force-dynamic");
+      assert.equal(weatherRoute.maxDuration, 60);
     });
   });
 });

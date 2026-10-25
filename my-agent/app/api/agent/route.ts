@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MODEL, runAgent, type ChatMessage, type Step } from "@/agent/agent";
-import { tools } from "@/agent/tools";
+import { MODEL, runAgent, type ChatMessage, type Step } from "../../../agent/agent";
+import { tools } from "../../../agent/tools";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;

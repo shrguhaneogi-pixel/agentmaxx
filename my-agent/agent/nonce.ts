@@ -92,11 +92,12 @@ export class UpstashRedisNonceStore implements NonceStore {
     const key = `agentmaxx:nonce:${from.toLowerCase()}:${nonce}`;
 
     try {
-      // Execute atomic SET key "1" NX EX ttlSeconds
+      // Execute atomic SET key "1" NX EX ttlSeconds with strict 3s timeout
       const res = await fetch(`${this.restUrl}/set/${encodeURIComponent(key)}/1/NX/EX/${ttlSeconds}`, {
         headers: {
           Authorization: `Bearer ${this.restToken}`,
         },
+        signal: AbortSignal.timeout(3000),
       });
 
       if (!res.ok) {
@@ -110,6 +111,9 @@ export class UpstashRedisNonceStore implements NonceStore {
 
       return { success: false, reason: "Replay Attack Detected: Nonce has already been consumed." };
     } catch (err: unknown) {
+      if (err instanceof Error && (err.name === "AbortError" || err.name === "TimeoutError")) {
+        return { success: false, reason: "Distributed nonce store timeout (3s limit). Operation aborted to protect serverless latency." };
+      }
       const msg = err instanceof Error ? err.message : String(err);
       return { success: false, reason: `Distributed nonce store operational error: ${msg}` };
     }

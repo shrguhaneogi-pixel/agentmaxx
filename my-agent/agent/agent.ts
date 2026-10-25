@@ -62,6 +62,7 @@ export type AgentContext = {
   baseUrl: string;
   confirmedDealId?: string;
   requestId?: string;
+  turnStartTime?: number;
 };
 
 export async function runAgent(
@@ -74,11 +75,25 @@ export async function runAgent(
     role: m.role === "user" ? "user" : "model",
     parts: [{ text: m.text }],
   }));
-  const turnStartTime = Date.now();
+  const turnStartTime = ctx.turnStartTime ?? Date.now();
   const steps: Step[] = [];
 
   try {
     for (let i = 0; i < MAX_STEPS; i++) {
+      // Stopwatch circuit breaker: Halt sequence before Vercel 504 proxy timeout limit
+      const elapsedMs = Date.now() - turnStartTime;
+      if (elapsedMs > 45000) {
+        span.status = "timeout_prevented";
+        span.errorCategory = "REACT_LOOP_CIRCUIT_BREAKER";
+        telemetry.recordSpan(span);
+        return {
+          answer:
+            "The Grand Bazaar is experiencing heavy merchant traffic, traveler! I must pause our discussion briefly to avoid a stall disruption. Your negotiation progress is safe—please confirm your intent or check back momentarily.",
+          steps,
+          telemetry: span,
+        };
+      }
+
       span.reactIterations++;
       let response;
       const generateConfig = {

@@ -14,6 +14,7 @@ import { verifyPayment } from "../../../../agent/wallet";
 import { getNonceStore } from "../../../../agent/nonce";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const PRICE = "0.01";
 const ASSET = "USDC";

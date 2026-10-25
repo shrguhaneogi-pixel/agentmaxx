@@ -174,14 +174,28 @@ export const tools: Tool[] = [
             };
           }
 
+          if (settlement.status === "pending_network_confirmation") {
+            return {
+              success: true,
+              status: "pending_network_confirmation",
+              dealId,
+              receiptId: completion.receipt.id,
+              receipt: completion.receipt,
+              txHash: settlement.txHash,
+              settlement,
+              message: `Transaction broadcasted (${settlement.txHash}). Awaiting network confirmation on Base Sepolia.`,
+            };
+          }
+
           return {
             success: true,
+            status: "confirmed",
             dealId,
             receiptId: completion.receipt.id,
             receipt: completion.receipt,
             txHash: settlement.txHash,
-            blockNumber: settlement.blockNumber.toString(),
-            gasUsed: settlement.gasUsed.toString(),
+            blockNumber: settlement.blockNumber?.toString() ?? "pending",
+            gasUsed: settlement.gasUsed?.toString() ?? "pending",
             settlement,
             message: "On-chain payment settled on Base Sepolia and verified. Deal is completed.",
           };

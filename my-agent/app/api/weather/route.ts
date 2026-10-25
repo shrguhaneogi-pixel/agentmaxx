@@ -5,9 +5,10 @@
  * No payment → 402 Payment Required. Valid signed payment → the weather.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { verifyPayment } from "@/agent/wallet";
+import { verifyPayment } from "../../../agent/wallet";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 const PRICE = "0.01";
 const ASSET = "USDC";
