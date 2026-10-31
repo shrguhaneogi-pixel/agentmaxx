@@ -1,0 +1,452 @@
+{
+  ".github/ISSUE_TEMPLATE/agent_tool_proposal.yml": {
+    "mtime": 1792846816.1468654,
+    "seen": 1793440965.8393297,
+    "ast_hash": "0324b8458fb363beeecbf3682a588f16",
+    "semantic_hash": ""
+  },
+  ".github/ISSUE_TEMPLATE/bug_report.yml": {
+    "mtime": 1792846797.4166386,
+    "seen": 1793440965.8393385,
+    "ast_hash": "1b11ea498b3165f8381355af7b34120a",
+    "semantic_hash": ""
+  },
+  ".github/ISSUE_TEMPLATE/feature_request.yml": {
+    "mtime": 1792846806.6586883,
+    "seen": 1793440965.839342,
+    "ast_hash": "9c8a74b87f9134a3522657f12f5ef9aa",
+    "semantic_hash": ""
+  },
+  "hardhat.config.js": {
+    "mtime": 1792835411.8437035,
+    "seen": 1793440965.839344,
+    "ast_hash": "286720b83650c7508dcd59d4e7181167",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/abi/BazaarEscrow.ts": {
+    "mtime": 1792835845.4234402,
+    "seen": 1793440965.8393466,
+    "ast_hash": "58d20c487dcafa9c904b40b0c70eb961",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/agent.ts": {
+    "mtime": 1792921473.6693914,
+    "seen": 1793440965.8393486,
+    "ast_hash": "7d05aa73d2f8f2314453c80f91a43705",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/bazaar.ts": {
+    "mtime": 1792935953.0943303,
+    "seen": 1793440965.8393502,
+    "ast_hash": "aad9293d3187e929a461ff940e9f1fc9",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/crypto.ts": {
+    "mtime": 1792835700.5990362,
+    "seen": 1793440965.839352,
+    "ast_hash": "41dca0059ec62dd810d5cd9c6cdb93c2",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/nonce.ts": {
+    "mtime": 1792921458.3331795,
+    "seen": 1793440965.8393536,
+    "ast_hash": "8eb013f259b0e62a8084ec052f7d64eb",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/telemetry.ts": {
+    "mtime": 1792921534.3171,
+    "seen": 1793440965.8393555,
+    "ast_hash": "6b15e00d04637584d6ebd3a58c8d345c",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/tools.ts": {
+    "mtime": 1792921446.315046,
+    "seen": 1793440965.839357,
+    "ast_hash": "7c3590255ec73dc4dd3c13cad18c7fff",
+    "semantic_hash": ""
+  },
+  "my-agent/agent/wallet.ts": {
+    "mtime": 1792921647.7110722,
+    "seen": 1793440965.8393588,
+    "ast_hash": "3c1d4e1023c9a6580bd911e0a276cba9",
+    "semantic_hash": ""
+  },
+  "my-agent/app/api/agent/route.ts": {
+    "mtime": 1792921847.4810119,
+    "seen": 1793440965.8393605,
+    "ast_hash": "cfac2aa5f71a795037e8d4df1807f785",
+    "semantic_hash": ""
+  },
+  "my-agent/app/api/bazaar/checkout/route.ts": {
+    "mtime": 1792921348.8076868,
+    "seen": 1793440965.8393621,
+    "ast_hash": "c28c294fb84a9e80306099510d116476",
+    "semantic_hash": ""
+  },
+  "my-agent/app/api/bazaar/route.ts": {
+    "mtime": 1792845802.7245872,
+    "seen": 1793440965.8393638,
+    "ast_hash": "fe09e032b079f8590696d3962bd8c44f",
+    "semantic_hash": ""
+  },
+  "my-agent/app/api/wallet/route.ts": {
+    "mtime": 1792921852.9644966,
+    "seen": 1793440965.8393655,
+    "ast_hash": "ed148114f55e62db3b746e53d7282953",
+    "semantic_hash": ""
+  },
+  "my-agent/app/api/weather/route.ts": {
+    "mtime": 1792921858.1895804,
+    "seen": 1793440965.8393672,
+    "ast_hash": "03de2b7ad60f73bb035caeaa40ee24ea",
+    "semantic_hash": ""
+  },
+  "my-agent/app/layout.tsx": {
+    "mtime": 1792846156.0829637,
+    "seen": 1793440965.8393688,
+    "ast_hash": "f08562b03a21eada44aeadeac240deee",
+    "semantic_hash": ""
+  },
+  "my-agent/app/page.tsx": {
+    "mtime": 1792910474.4683228,
+    "seen": 1793440965.8393705,
+    "ast_hash": "a64cc27c3f0413b591b6a0bac264dfc3",
+    "semantic_hash": ""
+  },
+  "my-agent/components.json": {
+    "mtime": 1791641284.8497417,
+    "seen": 1793440965.8393717,
+    "ast_hash": "63b2c4fcf776fec9dbc76e94ea0d70c6",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/astrolabe-canvas.tsx": {
+    "mtime": 1792860778.6216366,
+    "seen": 1793440965.8393736,
+    "ast_hash": "6554b4f96eb10f07934fb7aa4ccaf4a6",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/astrolabe-fallback.tsx": {
+    "mtime": 1792860721.8235712,
+    "seen": 1793440965.839375,
+    "ast_hash": "db69eb435b98216c61641ceb4d9cfdba",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/astrolabe-hud.tsx": {
+    "mtime": 1792860736.1005068,
+    "seen": 1793440965.8393772,
+    "ast_hash": "722ca02f3ef7a82d0ce66b0f77a3c1fe",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/astrolabe-scene.tsx": {
+    "mtime": 1792860770.9261484,
+    "seen": 1793440965.8393786,
+    "ast_hash": "76183b3604c3ddc3c169b2a939ec3d7b",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/bazaar-astrolabe-3d.tsx": {
+    "mtime": 1792860791.0649157,
+    "seen": 1793440965.8393805,
+    "ast_hash": "d57d6456e8e8180c3018a83a36c8f12f",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/index.ts": {
+    "mtime": 1792861211.2279713,
+    "seen": 1793440965.839382,
+    "ast_hash": "69c749a866fa207a7b816137bad4de29",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/state-machine.ts": {
+    "mtime": 1792861202.6099396,
+    "seen": 1793440965.8393836,
+    "ast_hash": "214e7b01e1a539bed806e0ab6b527381",
+    "semantic_hash": ""
+  },
+  "my-agent/components/astrolabe/types.ts": {
+    "mtime": 1792860705.6443102,
+    "seen": 1793440965.839385,
+    "ast_hash": "fb2824f3bbf5450dc003641bf3d7b64c",
+    "semantic_hash": ""
+  },
+  "my-agent/components/bazaar-inventory.tsx": {
+    "mtime": 1792845828.674128,
+    "seen": 1793440965.839387,
+    "ast_hash": "7f2ee6a0ccd4ad9eecbee5e6a99ffc26",
+    "semantic_hash": ""
+  },
+  "my-agent/components/bazaar-spline-environment.tsx": {
+    "mtime": 1792846226.9180374,
+    "seen": 1793440965.8393884,
+    "ast_hash": "e610ed68b956f928cbfd89555753eaac",
+    "semantic_hash": ""
+  },
+  "my-agent/components/chat/bazaar-status-banner.tsx": {
+    "mtime": 1792845880.2786136,
+    "seen": 1793440965.83939,
+    "ast_hash": "d18aacfee64d1c18580c2d86bb4224ad",
+    "semantic_hash": ""
+  },
+  "my-agent/components/chat/composer.tsx": {
+    "mtime": 1792845970.5906892,
+    "seen": 1793440965.8393915,
+    "ast_hash": "1024e078274019538f289d24437d98fd",
+    "semantic_hash": ""
+  },
+  "my-agent/components/chat/empty-state.tsx": {
+    "mtime": 1792861083.3326938,
+    "seen": 1793440965.8393931,
+    "ast_hash": "f7a079e0c95793403998ea8621c3f613",
+    "semantic_hash": ""
+  },
+  "my-agent/components/chat/tool-telemetry.tsx": {
+    "mtime": 1792245888.3967545,
+    "seen": 1793440965.8393948,
+    "ast_hash": "181166e97e23d0fe0c0b9c7adcf99730",
+    "semantic_hash": ""
+  },
+  "my-agent/components/command-palette.tsx": {
+    "mtime": 1792245844.2565012,
+    "seen": 1793440965.8393962,
+    "ast_hash": "52cd883a93f189d06012fd92b96f2725",
+    "semantic_hash": ""
+  },
+  "my-agent/components/header.tsx": {
+    "mtime": 1792845856.315897,
+    "seen": 1793440965.839398,
+    "ast_hash": "fc1a6883c3934908078553a7f9a0f864",
+    "semantic_hash": ""
+  },
+  "my-agent/components/hero.tsx": {
+    "mtime": 1792845867.5682046,
+    "seen": 1793440965.8393996,
+    "ast_hash": "6b000834669589d1ff3782f6430b41c5",
+    "semantic_hash": ""
+  },
+  "my-agent/components/setup-panel.tsx": {
+    "mtime": 1792910407.7907972,
+    "seen": 1793440965.8394012,
+    "ast_hash": "076f5429be7ef3c25c3560d1f77b8427",
+    "semantic_hash": ""
+  },
+  "my-agent/components/tools-panel.tsx": {
+    "mtime": 1792910412.7161124,
+    "seen": 1793440965.8394027,
+    "ast_hash": "93f29e35e0519688e5f1a74e33938c2b",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/badge.tsx": {
+    "mtime": 1791715737.9769888,
+    "seen": 1793440965.8394043,
+    "ast_hash": "932ee1185cec596e3f59a58dabee0c8d",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/bazaar-cursor.tsx": {
+    "mtime": 1792846143.783682,
+    "seen": 1793440965.8394058,
+    "ast_hash": "b66f61d3d7061caaf2d12846a52b5226",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/button.tsx": {
+    "mtime": 1791715747.3205345,
+    "seen": 1793440965.8394077,
+    "ast_hash": "bff3c93d0f37484a4eea344c26fbe7cc",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/card.tsx": {
+    "mtime": 1791715756.3590202,
+    "seen": 1793440965.839409,
+    "ast_hash": "6e13be3ab6ed0cc7924751c5aa205bb5",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/collapsible.tsx": {
+    "mtime": 1791641291.0085204,
+    "seen": 1793440965.8394115,
+    "ast_hash": "bc00817a4471ae1d76774aa4c50a7c31",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/input.tsx": {
+    "mtime": 1791715769.2408974,
+    "seen": 1793440965.839413,
+    "ast_hash": "5c0b21228f27bfe95bde99b5474a2efb",
+    "semantic_hash": ""
+  },
+  "my-agent/components/ui/scroll-area.tsx": {
+    "mtime": 1792910417.6851168,
+    "seen": 1793440965.8394146,
+    "ast_hash": "ee1b271d513390d565b6a26a84c3b1dd",
+    "semantic_hash": ""
+  },
+  "my-agent/lib/utils.ts": {
+    "mtime": 1791641290.1074698,
+    "seen": 1793440965.839416,
+    "ast_hash": "0482d21cfeab8cfcfe44f94927e45afb",
+    "semantic_hash": ""
+  },
+  "my-agent/next.config.ts": {
+    "mtime": 1792246171.266932,
+    "seen": 1793440965.8394177,
+    "ast_hash": "dc903cb3427ba2b29c3cbfe38a1ed784",
+    "semantic_hash": ""
+  },
+  "my-agent/package.json": {
+    "mtime": 1792861235.2368467,
+    "seen": 1793440965.8394194,
+    "ast_hash": "ef36e7e86879b34e1482726ef60015f3",
+    "semantic_hash": ""
+  },
+  "my-agent/postcss.config.mjs": {
+    "mtime": 1791641286.6852071,
+    "seen": 1793440965.839421,
+    "ast_hash": "43e9eb4ddea8510649c3ee775ffe0047",
+    "semantic_hash": ""
+  },
+  "my-agent/tests/astrolabe.test.ts": {
+    "mtime": 1792861280.319004,
+    "seen": 1793440965.8394225,
+    "ast_hash": "c846c5fdf898b81075aba9ce85759255",
+    "semantic_hash": ""
+  },
+  "my-agent/tests/bazaar.test.ts": {
+    "mtime": 1792921929.4216213,
+    "seen": 1793440965.8394244,
+    "ast_hash": "856044d0612d1e976aa855cf60374226",
+    "semantic_hash": ""
+  },
+  "my-agent/tests/telemetry.test.ts": {
+    "mtime": 1792846424.2236452,
+    "seen": 1793440965.8394258,
+    "ast_hash": "f978c87b38b2e41d1a7786f38cc62c65",
+    "semantic_hash": ""
+  },
+  "my-agent/tsconfig.json": {
+    "mtime": 1791641285.8822632,
+    "seen": 1793440965.8394275,
+    "ast_hash": "3ade29b16d840476ac5762ea18f2a910",
+    "semantic_hash": ""
+  },
+  "my-agent/vercel.json": {
+    "mtime": 1791712395.5702198,
+    "seen": 1793440965.8394291,
+    "ast_hash": "4188dd8d6b745cca5d443108639b1fe2",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1792835100.7621207,
+    "seen": 1793440965.8394306,
+    "ast_hash": "41c6ea974f70116bbf8c04868c05e77c",
+    "semantic_hash": ""
+  },
+  "scripts/chrome-daemon.mjs": {
+    "mtime": 1792935953.351048,
+    "seen": 1793440965.8394322,
+    "ast_hash": "488adc75e78e834444f3a526141b53da",
+    "semantic_hash": ""
+  },
+  "scripts/deploy-escrow.js": {
+    "mtime": 1792835490.543955,
+    "seen": 1793440965.839434,
+    "ast_hash": "009657a1d4a3d6eb84327ae01bc7dd2f",
+    "semantic_hash": ""
+  },
+  "scripts/e2e-browser-automation.mjs": {
+    "mtime": 1792935953.1252966,
+    "seen": 1793440965.8394358,
+    "ast_hash": "a19e19a9aeeea2662244774cd64fa25f",
+    "semantic_hash": ""
+  },
+  ".github/pull_request_template.md": {
+    "mtime": 1792846824.0258932,
+    "seen": 1793440965.8394372,
+    "ast_hash": "d012ae183efecf7ea10ed08191dc736a",
+    "semantic_hash": ""
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1792935952.9373753,
+    "seen": 1793440965.839439,
+    "ast_hash": "9337cb0b95dd97c59118f27fc04c9a40",
+    "semantic_hash": ""
+  },
+  "DEPLOYMENT.md": {
+    "mtime": 1791720023.058519,
+    "seen": 1793440965.8394403,
+    "ast_hash": "8e8630e8b91a900ed348ed807bf56a62",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1792936001.4651885,
+    "seen": 1793440965.8394423,
+    "ast_hash": "124e2d93a52da7c2b8308402e34d50fc",
+    "semantic_hash": ""
+  },
+  "my-agent/AGENTS.md": {
+    "mtime": 1792244067.6501322,
+    "seen": 1793440965.8394437,
+    "ast_hash": "c98dbebb744eadc1acc4b9f58bfe0f42",
+    "semantic_hash": ""
+  },
+  "my-agent/README.md": {
+    "mtime": 1792935953.5180323,
+    "seen": 1793440965.8394454,
+    "ast_hash": "071b06823e1fc56f9cf0dd0fdcfa77fa",
+    "semantic_hash": ""
+  },
+  "my-agent/public/browser-step1-wallet.png": {
+    "mtime": 1792935953.2671094,
+    "seen": 1793440965.8394468,
+    "ast_hash": "1e776015557bd281cc2a39651dfa1f33",
+    "semantic_hash": ""
+  },
+  "my-agent/public/browser-step2-balance.png": {
+    "mtime": 1792935953.2849123,
+    "seen": 1793440965.8394487,
+    "ast_hash": "91fee91ba4a1cfad8f0b8afbc66219a7",
+    "semantic_hash": ""
+  },
+  "my-agent/public/browser-step3-wares.png": {
+    "mtime": 1792935953.3042889,
+    "seen": 1793440965.8394501,
+    "ast_hash": "12c286c1fb55c1fadca4d1f3f74bc46c",
+    "semantic_hash": ""
+  },
+  "my-agent/public/browser-step4-haggle.png": {
+    "mtime": 1792935953.3246202,
+    "seen": 1793440965.8394516,
+    "ast_hash": "0c83ebeccf483391a52931da2a28368b",
+    "semantic_hash": ""
+  },
+  "my-agent/public/browser-step5-receipt.png": {
+    "mtime": 1792935953.3459456,
+    "seen": 1793440965.8394532,
+    "ast_hash": "03ffdd237c36cacbada1372071fe0d3e",
+    "semantic_hash": ""
+  },
+  "my-agent/public/e2e-demo-receipt.png": {
+    "mtime": 1792935953.1201475,
+    "seen": 1793440965.839455,
+    "ast_hash": "5d580e790b7db143b46e86116d516d96",
+    "semantic_hash": ""
+  },
+  "my-agent/public/risein-logo.svg": {
+    "mtime": 1791641287.5977435,
+    "seen": 1793440965.8394566,
+    "ast_hash": "5bb7e445768038c5ebf9b9023d0a5987",
+    "semantic_hash": ""
+  },
+  "contracts/BazaarEscrow.sol": {
+    "mtime": 1792835370.263806,
+    "seen": 1793441003.2213118,
+    "ast_hash": "8c7ecac934883dd0eaf9f6887e06676e",
+    "semantic_hash": ""
+  },
+  "my-agent/package-lock.json": {
+    "mtime": 1792860112.3918512,
+    "seen": 1793440965.839458,
+    "ast_hash": "b8f9948a8293b43deda50ebedcbf136c",
+    "semantic_hash": ""
+  },
+  "package-lock.json": {
+    "mtime": 1792835017.1354282,
+    "seen": 1793440965.83946,
+    "ast_hash": "d7de64988314905f840197e7e58ee1df",
+    "semantic_hash": ""
+  }
+}

@@ -1,0 +1,2257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agentmaxx — Complete Call Flow &amp; Architecture Documentation</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --border: #334155;
+  --text: #e2e8f0; --muted: #94a3b8; --accent: #38bdf8;
+  --warn: #fbbf24; --err: #f87171; --ok: #34d399;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+.container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 2.4rem; margin-bottom: 8px; background: linear-gradient(135deg, var(--accent), #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+h2 { font-size: 1.7rem; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.25rem; margin: 32px 0 12px; color: var(--accent); }
+h4 { font-size: 1.05rem; margin: 20px 0 8px; color: var(--warn); }
+p { margin: 8px 0; color: var(--muted); }
+.subtitle { color: var(--muted); font-size: 1.1rem; margin-bottom: 32px; }
+.mermaid { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 20px 0; overflow-x: auto; position: relative; }
+.mermaid.is-enhanced { padding: 0; overflow: hidden; min-height: 260px; }
+.mermaid-viewport { padding: 54px 24px 24px; overflow: hidden; cursor: grab; touch-action: none; min-height: 260px; }
+.mermaid-viewport.is-dragging { cursor: grabbing; }
+.mermaid-viewport svg { max-width: none !important; height: auto; transform-origin: 0 0; transition: transform 120ms ease; }
+.mermaid-toolbar { position: absolute; top: 10px; right: 10px; z-index: 3; display: flex; align-items: center; gap: 6px; padding: 6px; background: rgba(15,23,42,0.92); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.28); }
+.mermaid-toolbar button, .mermaid-toolbar .zoom-level { height: 28px; min-width: 32px; border: 1px solid var(--border); border-radius: 6px; background: #1e293b; color: var(--text); font: 600 0.78rem system-ui, sans-serif; display: inline-flex; align-items: center; justify-content: center; }
+.mermaid-toolbar button { cursor: pointer; }
+.mermaid-toolbar button:hover { border-color: var(--accent); color: var(--accent); }
+.mermaid-toolbar .zoom-level { min-width: 52px; color: var(--muted); background: transparent; }
+.call-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.92rem; }
+.call-table th { background: #1a2744; color: var(--accent); text-align: left; padding: 10px 14px; border: 1px solid var(--border); }
+.call-table td { padding: 8px 14px; border: 1px solid var(--border); vertical-align: top; }
+.call-table tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+.tag-async { background: #7c3aed33; color: #a78bfa; }
+.tag-class { background: #05966933; color: var(--ok); }
+.tag-func { background: #2563eb33; color: var(--accent); }
+.tag-cmd { background: #d9770633; color: var(--warn); }
+.tag-endpoint { background: #dc262633; color: var(--err); }
+.tag-hook { background: #db277733; color: #f472b6; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 16px 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; margin: 16px 0; }
+.arrow-chain { font-family: 'Fira Code', monospace; font-size: 0.85rem; color: var(--accent); padding: 10px; background: rgba(56,189,248,0.06); border-radius: 6px; }
+code { font-family: 'Fira Code', 'Cascadia Code', monospace; background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.88em; }
+ul, ol { margin: 8px 0 8px 24px; color: var(--muted); }
+li { margin: 4px 0; }
+a { color: var(--accent); }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+.nav { position: sticky; top: 0; background: var(--bg); z-index: 10; padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.9rem; }
+.nav a { text-decoration: none; }
+.nav a:hover { text-decoration: underline; }
+@media (max-width: 768px) { .container { padding: 16px; } h1 { font-size: 1.8rem; } }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>agentmaxx — Complete Call Flow &amp; Architecture Documentation</h1>
+<p class="subtitle">Generated from graphify knowledge graph: 575 nodes, 972 edges, 28 communities. Commit: 2217e89</p>
+
+<div class="nav">
+    <a href="#overview">Architecture Overview</a>
+    <a href="#build-graph">Graph Build</a>
+    <a href="#outputs-docs">Outputs &amp; Docs</a>
+    <a href="#cli-skills">CLI &amp; Skill Installers</a>
+    <a href="#serve-api">Serving API</a>
+    <a href="#scripts-e2e-browser">Scripts E2E Browser</a>
+    <a href="#contracts-bazaarescrowsol-users">Contracts Bazaarescrowsol Users</a>
+    <a href="#deploymentmd-deployment-link">Deploymentmd Deployment Link</a>
+    <a href="#hardhat-hardhatconfigjs">Hardhat Hardhatconfigjs</a>
+</div>
+
+<!-- ====== Architecture Overview ====== -->
+<h2 id="overview">1. Architecture Overview</h2>
+
+<div class="mermaid">
+
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    BUILD_GRAPH_321CBB04("Graph Build<br/><small>68 nodes</small>")
+    class BUILD_GRAPH_321CBB04 module;
+    OUTPUTS_DOCS_ED82387C("Outputs &amp; Docs<br/><small>17 nodes</small>")
+    class OUTPUTS_DOCS_ED82387C module;
+    CLI_SKILLS_9964CBB8("CLI &amp; Skill Installers<br/><small>417 nodes</small>")
+    class CLI_SKILLS_9964CBB8 module;
+    SERVE_API_35EC8E86("Serving API<br/><small>17 nodes</small>")
+    class SERVE_API_35EC8E86 module;
+    SCRIPTS_E2E_BROWSER_BF070F2F("Scripts E2E Browser<br/><small>22 nodes</small>")
+    class SCRIPTS_E2E_BROWSER_BF070F2F module;
+    CONTRACTS_BAZAARESCROWSOL_USERS_EB138526("Contracts Bazaarescrowsol Users<br/><small>21 nodes</small>")
+    class CONTRACTS_BAZAARESCROWSOL_USERS_EB138526 module;
+    DEPLOYMENTMD_DEPLOYMENT_LINK_931BE3AD("Deploymentmd Deployment Link<br/><small>11 nodes</small>")
+    class DEPLOYMENTMD_DEPLOYMENT_LINK_931BE3AD module;
+    HARDHAT_HARDHATCONFIGJS_D2D66C35("Hardhat Hardhatconfigjs<br/><small>2 nodes</small>")
+    class HARDHAT_HARDHATCONFIGJS_D2D66C35 module;
+    CLI_SKILLS_9964CBB8 -->|imports x3| SCRIPTS_E2E_BROWSER_BF070F2F
+    DEPLOYMENTMD_DEPLOYMENT_LINK_931BE3AD -->|references| CLI_SKILLS_9964CBB8
+    BUILD_GRAPH_321CBB04 -->|imports| CLI_SKILLS_9964CBB8
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h4>Architecture Layers</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>Layer</th><th>Nodes</th><th>Communities</th></tr>
+      <tr><td>Graph Build</td><td>68</td><td><code>6, 10, 15, 24, 26</code></td></tr><tr><td>Outputs &amp; Docs</td><td>17</td><td><code>12</code></td></tr><tr><td>CLI &amp; Skill Installers</td><td>417</td><td><code>0, 8, 2, 3, 1, 4, 5, 9, 11, 16, 17, 19, 20, 22, 21, 28, 30</code></td></tr><tr><td>Serving API</td><td>17</td><td><code>13</code></td></tr><tr><td>Scripts E2E Browser</td><td>22</td><td><code>7</code></td></tr><tr><td>Contracts Bazaarescrowsol Users</td><td>21</td><td><code>14</code></td></tr><tr><td>Deploymentmd Deployment Link</td><td>11</td><td><code>18</code></td></tr><tr><td>Hardhat Hardhatconfigjs</td><td>2</td><td><code>27</code></td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Core Flow</h4>
+    <div class="arrow-chain">Graph Build -&gt; CLI &amp; Skill Installers -&gt; Scripts E2E Browser -&gt; Outputs &amp; Docs -&gt; Serving API -&gt; Contracts Bazaarescrowsol Users -&gt; Deploymentmd Deployment Link</div>
+  </div>
+</div>
+<div class="grid">
+  <div class="card">
+    <h4>Graph Report Highlights</h4>
+    <ul>
+      <li>575 nodes · 972 edges · 28 communities (23 shown, 5 thin omitted)</li>
+      <li>Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 9 edges (avg confidence: 0.93)</li>
+      <li>Token cost: 0 input · 0 output</li>
+      <li>1. `Home()` - 22 edges</li>
+      <li>2. `react` - 18 edges</li>
+      <li>3. `compilerOptions` - 16 edges</li>
+    </ul>
+  </div>
+</div>
+<hr>
+<!-- ====== 2. Graph Build ====== -->
+<h2 id="build-graph">2. Graph Build</h2>
+<p>Graph Build groups implementation around agent, componentsjson, tsconfigjson, packagejson, mostly in my-agent/components.json, my-agent/tsconfig.json, package.json. This section covers 68 nodes and 65 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Graph Build (68 nodes, 65 edges)
+    subgraph build_graph_my_agent_components_json_418a0a40["my-agent/components.json"]
+        my_agent_components_schema_d0ec90ab("$schema<br/><small>my-agent/components.json</small>")
+        my_agent_components_aliases_7dbd6fb1("aliases<br/><small>my-agent/components.json</small>")
+        my_agent_components_tailwind_basecolor_b091f6bc("baseColor<br/><small>my-agent/components.json</small>")
+        my_agent_components_aliases_components_c4412b17("components<br/><small>my-agent/components.json</small>")
+        my_agent_components_bfe6d74c("components.json")
+        my_agent_components_tailwind_config_903f66f5("config<br/><small>my-agent/components.json</small>")
+        my_agent_components_tailwind_css_888d4565("css<br/><small>my-agent/components.json</small>")
+        my_agent_components_tailwind_cssvariables_55624917("cssVariables<br/><small>my-agent/components.json</small>")
+        my_agent_components_aliases_hooks_ab87882a("hooks<br/><small>my-agent/components.json</small>")
+        my_agent_components_iconlibrary_2b851ca3("iconLibrary<br/><small>my-agent/components.json</small>")
+        my_agent_components_aliases_lib_15f6837b("lib<br/><small>my-agent/components.json</small>")
+    end
+    subgraph build_graph_External_generated_653891f5["External / generated"]
+        ref_node_fs_b768bf73("ref_node_fs")
+        ref_node_path_350e6c64("ref_node_path")
+        ref_node_url_a44e0198("ref_node_url")
+    end
+    subgraph build_graph_package_json_4e40bfbd["package.json"]
+        package_582681c2("package.json")
+        ref_openzeppelin_contracts_3b67b8af("@openzeppelin/contracts<br/><small>package.json</small>")
+        ref_hardhat_8afd955b("hardhat<br/><small>package.json</small>")
+    end
+    scripts_deploy_escrow_6fae1fb7("deploy-escrow.js")
+    package_582681c2 -->|imports| ref_openzeppelin_contracts_3b67b8af
+    package_582681c2 -->|imports| ref_hardhat_8afd955b
+    scripts_deploy_escrow_6fae1fb7 -->|imports| ref_node_fs_b768bf73
+    scripts_deploy_escrow_6fae1fb7 -->|imports| ref_node_path_350e6c64
+    scripts_deploy_escrow_6fae1fb7 -->|imports| ref_node_url_a44e0198
+    %% Omitted for readability: 50 nodes, 0 edges
+    class my_agent_components_schema_d0ec90ab function;
+    class my_agent_components_aliases_7dbd6fb1 function;
+    class my_agent_components_tailwind_basecolor_b091f6bc function;
+    class my_agent_components_aliases_components_c4412b17 ui;
+    class my_agent_components_bfe6d74c ui;
+    class my_agent_components_tailwind_config_903f66f5 function;
+    class my_agent_components_tailwind_css_888d4565 function;
+    class my_agent_components_tailwind_cssvariables_55624917 function;
+    class my_agent_components_aliases_hooks_ab87882a ui;
+    class my_agent_components_iconlibrary_2b851ca3 function;
+    class my_agent_components_aliases_lib_15f6837b function;
+    class ref_node_fs_b768bf73 function;
+    class ref_node_path_350e6c64 function;
+    class ref_node_url_a44e0198 function;
+    class package_582681c2 function;
+    class ref_openzeppelin_contracts_3b67b8af function;
+    class ref_hardhat_8afd955b function;
+    class scripts_deploy_escrow_6fae1fb7 module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>components.json</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>components.json node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>aliases</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>aliases node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>components</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>components node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>hooks</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>hooks node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>lib</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>lib node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>ui</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ui node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>utils</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>utils node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>iconLibrary</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>iconLibrary node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>menuAccent</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>menuAccent node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>menuColor</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>menuColor node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>registries</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>registries node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>rsc</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>rsc node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>rtl</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>rtl node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>$schema</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>$schema node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>style</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>style node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>tailwind</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>tailwind node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>baseColor</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>baseColor node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>config</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>css</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>css node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>cssVariables</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>cssVariables node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>prefix</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>prefix node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>tsx</code><br><small style="color:var(--muted)">my-agent/components.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>tsx node in my-agent/components.json.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>tsconfig.json</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>compilerOptions</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>compilerOptions node in my-agent/tsconfig.json.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>allowJs</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>allowJs node in my-agent/tsconfig.json.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>esModuleInterop</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>esModuleInterop node in my-agent/tsconfig.json.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>incremental</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>incremental node in my-agent/tsconfig.json.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>isolatedModules</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>isolatedModules node in my-agent/tsconfig.json.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>jsx</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>jsx node in my-agent/tsconfig.json.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>lib</code><br><small style="color:var(--muted)">my-agent/tsconfig.json</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>lib node in my-agent/tsconfig.json.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>my-agent/components.json</code></td><td>22 nodes</td></tr>
+<tr><td><code>my-agent/tsconfig.json</code></td><td>19 nodes</td></tr>
+<tr><td><code>package.json</code></td><td>17 nodes</td></tr>
+<tr><td><code>scripts/deploy-escrow.js</code></td><td>4 nodes</td></tr>
+<tr><td><code>my-agent/vercel.json</code></td><td>3 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x58, imports x3, imports x2, declares x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 3. Outputs & Docs ====== -->
+<h2 id="outputs-docs">3. Outputs &amp; Docs</h2>
+<p>Outputs &amp; Docs groups implementation around bug, reportyml, github, issue, mostly in .github/ISSUE_TEMPLATE/bug_report.yml. This section covers 17 nodes and 16 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Outputs &amp; Docs (17 nodes, 16 edges)
+    github_issue_template_bug_report_body_attributes_54cd8b75("attributes<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_fa79ef98("bug_report.yml")
+    github_issue_template_bug_report_body_bc2f3c94("body<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_body_validation_c25ae665("validations<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_name_01dceb24("name<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_description_84f12ac7("description<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_title_078ac236("title<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_labels_1dde59ce("labels<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_body_type_ac5406f0("type<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_body_id_4e2deb96("id<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_attributes_labe_c109ff17("label<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_attributes_desc_42a76ac0("description<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_attributes_plac_b8e50268("placeholder<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_attributes_rend_213b05b8("render<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_attributes_opti_400ad440("options<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_attributes_valu_9cb3407f("value<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_validations_req_8dc346e9("required<br/><small>.github/ISSUE_TEMPLATE/bug_report.yml</small>")
+    github_issue_template_bug_report_fa79ef98 -->|contains| github_issue_template_bug_report_name_01dceb24
+    github_issue_template_bug_report_fa79ef98 -->|contains| github_issue_template_bug_report_description_84f12ac7
+    github_issue_template_bug_report_fa79ef98 -->|contains| github_issue_template_bug_report_title_078ac236
+    github_issue_template_bug_report_fa79ef98 -->|contains| github_issue_template_bug_report_labels_1dde59ce
+    github_issue_template_bug_report_fa79ef98 -->|contains| github_issue_template_bug_report_body_bc2f3c94
+    github_issue_template_bug_report_body_bc2f3c94 -->|contains| github_issue_template_bug_report_body_type_ac5406f0
+    github_issue_template_bug_report_body_bc2f3c94 -->|contains| github_issue_template_bug_report_body_id_4e2deb96
+    github_issue_template_bug_report_body_bc2f3c94 -->|contains| github_issue_template_bug_report_body_attributes_54cd8b75
+    github_issue_template_bug_report_body_bc2f3c94 -->|contains| github_issue_template_bug_report_body_validation_c25ae665
+    github_issue_template_bug_report_body_attributes_54cd8b75 -->|contains| github_issue_template_bug_report_attributes_labe_c109ff17
+    github_issue_template_bug_report_body_attributes_54cd8b75 -->|contains| github_issue_template_bug_report_attributes_desc_42a76ac0
+    github_issue_template_bug_report_body_attributes_54cd8b75 -->|contains| github_issue_template_bug_report_attributes_plac_b8e50268
+    github_issue_template_bug_report_body_attributes_54cd8b75 -->|contains| github_issue_template_bug_report_attributes_rend_213b05b8
+    github_issue_template_bug_report_body_attributes_54cd8b75 -->|contains| github_issue_template_bug_report_attributes_opti_400ad440
+    github_issue_template_bug_report_body_attributes_54cd8b75 -->|contains| github_issue_template_bug_report_attributes_valu_9cb3407f
+    github_issue_template_bug_report_body_validation_c25ae665 -->|contains| github_issue_template_bug_report_validations_req_8dc346e9
+    class github_issue_template_bug_report_body_attributes_54cd8b75 function;
+    class github_issue_template_bug_report_fa79ef98 function;
+    class github_issue_template_bug_report_body_bc2f3c94 function;
+    class github_issue_template_bug_report_body_validation_c25ae665 function;
+    class github_issue_template_bug_report_name_01dceb24 function;
+    class github_issue_template_bug_report_description_84f12ac7 function;
+    class github_issue_template_bug_report_title_078ac236 function;
+    class github_issue_template_bug_report_labels_1dde59ce function;
+    class github_issue_template_bug_report_body_type_ac5406f0 function;
+    class github_issue_template_bug_report_body_id_4e2deb96 function;
+    class github_issue_template_bug_report_attributes_labe_c109ff17 function;
+    class github_issue_template_bug_report_attributes_desc_42a76ac0 function;
+    class github_issue_template_bug_report_attributes_plac_b8e50268 function;
+    class github_issue_template_bug_report_attributes_rend_213b05b8 function;
+    class github_issue_template_bug_report_attributes_opti_400ad440 function;
+    class github_issue_template_bug_report_attributes_valu_9cb3407f function;
+    class github_issue_template_bug_report_validations_req_8dc346e9 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>bug_report.yml</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>bug_report.yml node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>description</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>description node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>label</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>label node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>options</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>options node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>placeholder</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>placeholder node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>render</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>render node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>value</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>value node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>body</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>body node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>attributes</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>attributes node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>id</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>id node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>type</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>type node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>validations</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>validations node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>description</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>description node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>labels</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>labels node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>name</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>name node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>title</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>title node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>required</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/bug_report.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>required node in .github/ISSUE_TEMPLATE/bug_report.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>.github/ISSUE_TEMPLATE/bug_report.yml</code></td><td>17 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x16. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 4. CLI & Skill Installers ====== -->
+<h2 id="cli-skills">4. CLI &amp; Skill Installers</h2>
+<p>CLI &amp; Skill Installers groups implementation around agent, components, readmemd, packagejson, mostly in my-agent/package.json, README.md, my-agent/agent/bazaar.ts. This section covers 417 nodes and 805 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: CLI &amp; Skill Installers (417 nodes, 805 edges)
+    subgraph cli_skills_my_agent_agent_telemetry_ts_7afd45d1["my-agent/agent/telemetry.ts"]
+        my_agent_agent_telemetry_telemetrycollector_2fc0d45a("TelemetryCollector<br/><small>my-agent/agent/telemetry.ts</small>")
+        my_agent_agent_telemetry_telemetrycollector_reco_65cf7323("recordSpan()<br/><small>my-agent/agent/telemetry.ts</small>")
+        my_agent_agent_telemetry_telemetrycollector_getr_20b01681("getRecentSpans()<br/><small>my-agent/agent/telemetry.ts</small>")
+        my_agent_agent_telemetry_telemetrycollector_clea_ddca6609("clearSpans()<br/><small>my-agent/agent/telemetry.ts</small>")
+        my_agent_agent_telemetry_telemetrycollector_geti_b848b161("getInstance()<br/><small>my-agent/agent/telemetry.ts</small>")
+        my_agent_agent_telemetry_telemetrycollector_crea_94b7fd61("createSpan()<br/><small>my-agent/agent/telemetry.ts</small>")
+    end
+    subgraph cli_skills_my_agent_agent_nonce_ts_e8d9bb65["my-agent/agent/nonce.ts"]
+        my_agent_agent_nonce_inmemorynoncestore_d62ace71("InMemoryNonceStore<br/><small>my-agent/agent/nonce.ts</small>")
+        my_agent_agent_nonce_inmemorynoncestore_claimnon_852dca4b("claimNonce()<br/><small>my-agent/agent/nonce.ts</small>")
+        my_agent_agent_nonce_inmemorynoncestore_reset_9cbedd20("reset()<br/><small>my-agent/agent/nonce.ts</small>")
+        my_agent_agent_nonce_inmemorynoncestore_sweepexp_025833ad("sweepExpired()<br/><small>my-agent/agent/nonce.ts</small>")
+    end
+    subgraph cli_skills_components_astrolabe_bazaar_astrolabe_a8139b94["components/astrolabe/bazaar-astrolabe-3d.tsx"]
+        my_agent_components_astrolabe_bazaar_astrolabe_3_6e9b033b("bazaar-astrolabe-3d.tsx")
+        my_agent_components_astrolabe_bazaar_astrolabe_3_7c5c15c8("WebGLErrorBoundary<br/><small>components/astrolabe/bazaar-astrolabe-3d.tsx</small>")
+        my_agent_components_astrolabe_bazaar_astrolabe_3_a18e082e("constructor()<br/><small>components/astrolabe/bazaar-astrolabe-3d.tsx</small>")
+    end
+    subgraph cli_skills_my_agent_app_page_tsx_d988f332["my-agent/app/page.tsx"]
+        my_agent_app_page_17da07d1("page.tsx")
+        my_agent_app_page_home_574b43b2("Home()<br/><small>my-agent/app/page.tsx</small>")
+    end
+    my_agent_agent_tools_c5326863("tools.ts")
+    my_agent_package_d7f41085("my-agent/package.json")
+    my_agent_tests_bazaar_test_ce31331d("bazaar.test.ts")
+    my_agent_agent_nonce_inmemorynoncestore_d62ace71 -->|method| my_agent_agent_nonce_inmemorynoncestore_claimnon_852dca4b
+    my_agent_agent_nonce_inmemorynoncestore_d62ace71 -->|method| my_agent_agent_nonce_inmemorynoncestore_reset_9cbedd20
+    my_agent_agent_nonce_inmemorynoncestore_d62ace71 -->|method| my_agent_agent_nonce_inmemorynoncestore_sweepexp_025833ad
+    my_agent_agent_telemetry_telemetrycollector_2fc0d45a -->|method| my_agent_agent_telemetry_telemetrycollector_reco_65cf7323
+    my_agent_agent_telemetry_telemetrycollector_2fc0d45a -->|method| my_agent_agent_telemetry_telemetrycollector_getr_20b01681
+    my_agent_agent_telemetry_telemetrycollector_2fc0d45a -->|method| my_agent_agent_telemetry_telemetrycollector_clea_ddca6609
+    my_agent_agent_telemetry_telemetrycollector_2fc0d45a -->|method| my_agent_agent_telemetry_telemetrycollector_geti_b848b161
+    my_agent_agent_telemetry_telemetrycollector_2fc0d45a -->|method| my_agent_agent_telemetry_telemetrycollector_crea_94b7fd61
+    my_agent_components_astrolabe_bazaar_astrolabe_3_7c5c15c8 -->|method| my_agent_components_astrolabe_bazaar_astrolabe_3_a18e082e
+    my_agent_agent_nonce_inmemorynoncestore_claimnon_852dca4b -->|calls| my_agent_agent_nonce_inmemorynoncestore_sweepexp_025833ad
+    my_agent_tests_bazaar_test_ce31331d -->|imports| my_agent_agent_tools_c5326863
+    %% Omitted for readability: 399 nodes, 0 edges
+    class my_agent_agent_telemetry_telemetrycollector_2fc0d45a klass;
+    class my_agent_agent_telemetry_telemetrycollector_reco_65cf7323 function;
+    class my_agent_agent_telemetry_telemetrycollector_getr_20b01681 function;
+    class my_agent_agent_telemetry_telemetrycollector_clea_ddca6609 function;
+    class my_agent_agent_telemetry_telemetrycollector_geti_b848b161 function;
+    class my_agent_agent_telemetry_telemetrycollector_crea_94b7fd61 function;
+    class my_agent_agent_nonce_inmemorynoncestore_d62ace71 ui;
+    class my_agent_agent_nonce_inmemorynoncestore_claimnon_852dca4b function;
+    class my_agent_agent_nonce_inmemorynoncestore_reset_9cbedd20 function;
+    class my_agent_agent_nonce_inmemorynoncestore_sweepexp_025833ad function;
+    class my_agent_components_astrolabe_bazaar_astrolabe_3_6e9b033b ui;
+    class my_agent_components_astrolabe_bazaar_astrolabe_3_7c5c15c8 ui;
+    class my_agent_components_astrolabe_bazaar_astrolabe_3_a18e082e ui;
+    class my_agent_app_page_17da07d1 ui;
+    class my_agent_app_page_home_574b43b2 ui;
+    class my_agent_agent_tools_c5326863 module;
+    class my_agent_package_d7f41085 function;
+    class my_agent_tests_bazaar_test_ce31331d test;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>Message</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Message node in my-agent/app/page.tsx.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>Status</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Status node in my-agent/app/page.tsx.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>BazaarInventoryProps</code><br><small style="color:var(--muted)">my-agent/components/bazaar-inventory.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>BazaarInventoryProps node in my-agent/components/bazaar-inventory.tsx.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>PublicWare</code><br><small style="color:var(--muted)">my-agent/components/bazaar-inventory.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PublicWare node in my-agent/components/bazaar-inventory.tsx.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>BazaarSplineEnvironmentProps</code><br><small style="color:var(--muted)">my-agent/components/bazaar-spline-environment.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>BazaarSplineEnvironmentProps node in my-agent/components/bazaar-spline-environment.tsx.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>BazaarStatusBannerProps</code><br><small style="color:var(--muted)">components/chat/bazaar-status-banner.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>BazaarStatusBannerProps node in components/chat/bazaar-status-banner.tsx.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>Mood</code><br><small style="color:var(--muted)">components/chat/bazaar-status-banner.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>Mood node in components/chat/bazaar-status-banner.tsx.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>ComposerProps</code><br><small style="color:var(--muted)">components/chat/composer.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ComposerProps node in components/chat/composer.tsx.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>PaymentSummary</code><br><small style="color:var(--muted)">components/chat/tool-telemetry.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PaymentSummary node in components/chat/tool-telemetry.tsx.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>Step</code><br><small style="color:var(--muted)">components/chat/tool-telemetry.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>Step node in components/chat/tool-telemetry.tsx.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>StepResult</code><br><small style="color:var(--muted)">components/chat/tool-telemetry.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>StepResult node in components/chat/tool-telemetry.tsx.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>CommandItem</code><br><small style="color:var(--muted)">my-agent/components/command-palette.tsx</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CommandItem node in my-agent/components/command-palette.tsx.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>CommandPaletteProps</code><br><small style="color:var(--muted)">my-agent/components/command-palette.tsx</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>CommandPaletteProps node in my-agent/components/command-palette.tsx.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>HeaderProps</code><br><small style="color:var(--muted)">my-agent/components/header.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>HeaderProps node in my-agent/components/header.tsx.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>HeroProps</code><br><small style="color:var(--muted)">my-agent/components/hero.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>HeroProps node in my-agent/components/hero.tsx.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>SetupPanelProps</code><br><small style="color:var(--muted)">my-agent/components/setup-panel.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>SetupPanelProps node in my-agent/components/setup-panel.tsx.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>WalletInfo</code><br><small style="color:var(--muted)">my-agent/components/setup-panel.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>WalletInfo node in my-agent/components/setup-panel.tsx.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>ToolDef</code><br><small style="color:var(--muted)">my-agent/components/tools-panel.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>ToolDef node in my-agent/components/tools-panel.tsx.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>ToolParam</code><br><small style="color:var(--muted)">my-agent/components/tools-panel.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ToolParam node in my-agent/components/tools-panel.tsx.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>ToolsPanelProps</code><br><small style="color:var(--muted)">my-agent/components/tools-panel.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ToolsPanelProps node in my-agent/components/tools-panel.tsx.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>Home()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>Badge()</code><br><small style="color:var(--muted)">components/ui/badge.tsx</small><br><code>BazaarAstrolabe3D()</code><br><small style="color:var(--muted)">components/astrolabe/bazaar-astrolabe-3d.tsx</small><br><code>BazaarInventory()</code><br><small style="color:var(--muted)">my-agent/components/bazaar-inventory.tsx</small><br>+17 more</td>
+  <td>Home() node in my-agent/app/page.tsx.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>createWallet()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>createWallet() node in my-agent/app/page.tsx.</td>
+</tr>
+<tr>
+  <td>23</td>
+  <td><code>handleKeyDown()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>Home()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>handleKeyDown() node in my-agent/app/page.tsx.</td>
+</tr>
+<tr>
+  <td>24</td>
+  <td><code>BazaarInventory()</code><br><small style="color:var(--muted)">my-agent/components/bazaar-inventory.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>Home()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><code>Badge()</code><br><small style="color:var(--muted)">components/ui/badge.tsx</small><br><code>Button()</code><br><small style="color:var(--muted)">components/ui/button.tsx</small></td>
+  <td>BazaarInventory() node in my-agent/components/bazaar-inventory.tsx.</td>
+</tr>
+<tr>
+  <td>25</td>
+  <td><code>BazaarSplineEnvironment()</code><br><small style="color:var(--muted)">my-agent/components/bazaar-spline-environment.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>Home()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>BazaarSplineEnvironment() node in my-agent/components/bazaar-spline-environment.tsx.</td>
+</tr>
+<tr>
+  <td>26</td>
+  <td><code>BazaarStatusBanner()</code><br><small style="color:var(--muted)">components/chat/bazaar-status-banner.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>Home()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>BazaarStatusBanner() node in components/chat/bazaar-status-banner.tsx.</td>
+</tr>
+<tr>
+  <td>27</td>
+  <td><code>Composer()</code><br><small style="color:var(--muted)">components/chat/composer.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>Home()</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small><br><code>page.tsx</code><br><small style="color:var(--muted)">my-agent/app/page.tsx</small></td>
+  <td><code>Button()</code><br><small style="color:var(--muted)">components/ui/button.tsx</small></td>
+  <td>Composer() node in components/chat/composer.tsx.</td>
+</tr>
+<tr>
+  <td>28</td>
+  <td><code>handleSubmit()</code><br><small style="color:var(--muted)">components/chat/composer.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>handleSubmit() node in components/chat/composer.tsx.</td>
+</tr>
+<tr>
+  <td>29</td>
+  <td><code>JsonViewer()</code><br><small style="color:var(--muted)">components/chat/tool-telemetry.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td><code>ToolTelemetry()</code><br><small style="color:var(--muted)">components/chat/tool-telemetry.tsx</small></td>
+  <td>No direct outbound edge</td>
+  <td>JsonViewer() node in components/chat/tool-telemetry.tsx.</td>
+</tr>
+<tr>
+  <td>30</td>
+  <td><code>copyJson()</code><br><small style="color:var(--muted)">components/chat/tool-telemetry.tsx</small></td>
+  <td><span class="tag tag-hook">UI</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>copyJson() node in components/chat/tool-telemetry.tsx.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>my-agent/package.json</code></td><td>54 nodes</td></tr>
+<tr><td><code>README.md</code></td><td>34 nodes</td></tr>
+<tr><td><code>my-agent/agent/bazaar.ts</code></td><td>34 nodes</td></tr>
+<tr><td><code>my-agent/README.md</code></td><td>24 nodes</td></tr>
+<tr><td><code>.github/ISSUE_TEMPLATE/agent_tool_proposal.yml</code></td><td>17 nodes</td></tr>
+<tr><td><code>my-agent/agent/wallet.ts</code></td><td>17 nodes</td></tr>
+<tr><td><code>my-agent/agent/nonce.ts</code></td><td>16 nodes</td></tr>
+<tr><td><code>my-agent/agent/crypto.ts</code></td><td>14 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x317, imports x184, imports x149, calls x92. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 5. Serving API ====== -->
+<h2 id="serve-api">5. Serving API</h2>
+<p>Serving API groups implementation around feature, requestyml, github, issue, mostly in .github/ISSUE_TEMPLATE/feature_request.yml. This section covers 17 nodes and 16 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Serving API (17 nodes, 16 edges)
+    github_issue_template_feature_request_af89c3bd("feature_request.yml")
+    github_issue_template_feature_request_body_attri_a6b812e1("attributes<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_body_615b023c("body<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_attributes_0a0a79f5("options<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_body_valid_cbb24dde("validations<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_name_67d0bc60("name<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_descriptio_93eafcd6("description<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_title_25b13d6e("title<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_labels_30d06463("labels<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_options_la_f8a39f32("label<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_body_type_45c78ffe("type<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_body_id_92ee2dda("id<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_attributes_5ac37d08("label<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_attributes_9c0d1dca("description<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_attributes_2e092e3d("placeholder<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_attributes_8174bbc9("value<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_validation_9cd6e4b5("required<br/><small>.github/ISSUE_TEMPLATE/feature_request.yml</small>")
+    github_issue_template_feature_request_af89c3bd -->|contains| github_issue_template_feature_request_name_67d0bc60
+    github_issue_template_feature_request_af89c3bd -->|contains| github_issue_template_feature_request_descriptio_93eafcd6
+    github_issue_template_feature_request_af89c3bd -->|contains| github_issue_template_feature_request_title_25b13d6e
+    github_issue_template_feature_request_af89c3bd -->|contains| github_issue_template_feature_request_labels_30d06463
+    github_issue_template_feature_request_af89c3bd -->|contains| github_issue_template_feature_request_body_615b023c
+    github_issue_template_feature_request_attributes_0a0a79f5 -->|contains| github_issue_template_feature_request_options_la_f8a39f32
+    github_issue_template_feature_request_body_615b023c -->|contains| github_issue_template_feature_request_body_type_45c78ffe
+    github_issue_template_feature_request_body_615b023c -->|contains| github_issue_template_feature_request_body_id_92ee2dda
+    github_issue_template_feature_request_body_615b023c -->|contains| github_issue_template_feature_request_body_attri_a6b812e1
+    github_issue_template_feature_request_body_615b023c -->|contains| github_issue_template_feature_request_body_valid_cbb24dde
+    github_issue_template_feature_request_body_attri_a6b812e1 -->|contains| github_issue_template_feature_request_attributes_5ac37d08
+    github_issue_template_feature_request_body_attri_a6b812e1 -->|contains| github_issue_template_feature_request_attributes_9c0d1dca
+    github_issue_template_feature_request_body_attri_a6b812e1 -->|contains| github_issue_template_feature_request_attributes_2e092e3d
+    github_issue_template_feature_request_body_attri_a6b812e1 -->|contains| github_issue_template_feature_request_attributes_0a0a79f5
+    github_issue_template_feature_request_body_attri_a6b812e1 -->|contains| github_issue_template_feature_request_attributes_8174bbc9
+    github_issue_template_feature_request_body_valid_cbb24dde -->|contains| github_issue_template_feature_request_validation_9cd6e4b5
+    class github_issue_template_feature_request_af89c3bd function;
+    class github_issue_template_feature_request_body_attri_a6b812e1 function;
+    class github_issue_template_feature_request_body_615b023c function;
+    class github_issue_template_feature_request_attributes_0a0a79f5 function;
+    class github_issue_template_feature_request_body_valid_cbb24dde function;
+    class github_issue_template_feature_request_name_67d0bc60 function;
+    class github_issue_template_feature_request_descriptio_93eafcd6 function;
+    class github_issue_template_feature_request_title_25b13d6e function;
+    class github_issue_template_feature_request_labels_30d06463 function;
+    class github_issue_template_feature_request_options_la_f8a39f32 function;
+    class github_issue_template_feature_request_body_type_45c78ffe function;
+    class github_issue_template_feature_request_body_id_92ee2dda function;
+    class github_issue_template_feature_request_attributes_5ac37d08 function;
+    class github_issue_template_feature_request_attributes_9c0d1dca function;
+    class github_issue_template_feature_request_attributes_2e092e3d function;
+    class github_issue_template_feature_request_attributes_8174bbc9 function;
+    class github_issue_template_feature_request_validation_9cd6e4b5 function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>feature_request.yml</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>feature_request.yml node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>description</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>description node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>label</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>label node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>options</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>options node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>placeholder</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>placeholder node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>value</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>value node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>body</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>body node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>attributes</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>attributes node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>id</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>id node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>type</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>type node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>validations</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>validations node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>description</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>description node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>labels</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>labels node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>name</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>name node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>label</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>label node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>title</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>title node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>required</code><br><small style="color:var(--muted)">.github/ISSUE_TEMPLATE/feature_request.yml</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>required node in .github/ISSUE_TEMPLATE/feature_request.yml.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>.github/ISSUE_TEMPLATE/feature_request.yml</code></td><td>17 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x16. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 6. Scripts E2E Browser ====== -->
+<h2 id="scripts-e2e-browser">6. Scripts E2E Browser</h2>
+<p>Scripts E2E Browser groups implementation around scripts, e2e, browser, automationmjs, mostly in scripts/e2e-browser-automation.mjs, scripts/chrome-daemon.mjs. This section covers 22 nodes and 34 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Scripts E2E Browser (22 nodes, 34 edges)
+    subgraph scripts_e2e_browser_scripts_e2e_browser_automati_2cea12ff["scripts/e2e-browser-automation.mjs"]
+        scripts_e2e_browser_automation_cdpclient_16b41ab2("CDPClient<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_982d6ee9("e2e-browser-automation.mjs")
+        scripts_e2e_browser_automation_main_5bd4e2cb("main()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_main_submitchatme_0c3dec71("submitChatMessage()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_main_waitforagent_6c97cfb7("waitForAgentTurn()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_cdpclient_constru_550d0b8e("constructor()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_cdpclient_send_d9a011e7("send()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_cdpclient_eval_702981c6("eval()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_cdpclient_screens_87ab506a("screenshot()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_cdpclient_close_1cefda80("close()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_getchromepagewsur_ae96cd33("getChromePageWsUrl()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_sleep_591f9a1b("sleep()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+        scripts_e2e_browser_automation_waitforserver_46ae1622("waitForServer()<br/><small>scripts/e2e-browser-automation.mjs</small>")
+    end
+    subgraph scripts_e2e_browser_External_generated_b1482035["External / generated"]
+        ref_child_process_a097a181("ref_child_process")
+        ref_fs_8204e0dd("ref_fs")
+        ref_path_6ea4f7de("ref_path")
+        ref_os_7d96cb2f("ref_os")
+    end
+    scripts_chrome_daemon_b96360cd("chrome-daemon.mjs")
+    scripts_e2e_browser_automation_cdpclient_16b41ab2 -->|method| scripts_e2e_browser_automation_cdpclient_constru_550d0b8e
+    scripts_e2e_browser_automation_cdpclient_16b41ab2 -->|method| scripts_e2e_browser_automation_cdpclient_send_d9a011e7
+    scripts_e2e_browser_automation_cdpclient_16b41ab2 -->|method| scripts_e2e_browser_automation_cdpclient_eval_702981c6
+    scripts_e2e_browser_automation_cdpclient_16b41ab2 -->|method| scripts_e2e_browser_automation_cdpclient_screens_87ab506a
+    scripts_e2e_browser_automation_cdpclient_16b41ab2 -->|method| scripts_e2e_browser_automation_cdpclient_close_1cefda80
+    scripts_e2e_browser_automation_cdpclient_eval_702981c6 -->|calls| scripts_e2e_browser_automation_cdpclient_send_d9a011e7
+    scripts_e2e_browser_automation_cdpclient_screens_87ab506a -->|calls| scripts_e2e_browser_automation_cdpclient_send_d9a011e7
+    scripts_e2e_browser_automation_getchromepagewsur_ae96cd33 -->|calls| scripts_e2e_browser_automation_sleep_591f9a1b
+    scripts_e2e_browser_automation_main_5bd4e2cb -->|calls| scripts_e2e_browser_automation_waitforserver_46ae1622
+    scripts_e2e_browser_automation_main_5bd4e2cb -->|calls| scripts_e2e_browser_automation_getchromepagewsur_ae96cd33
+    scripts_e2e_browser_automation_main_5bd4e2cb -->|calls| scripts_e2e_browser_automation_cdpclient_16b41ab2
+    scripts_e2e_browser_automation_main_5bd4e2cb -->|calls| scripts_e2e_browser_automation_sleep_591f9a1b
+    scripts_e2e_browser_automation_main_submitchatme_0c3dec71 -->|calls| scripts_e2e_browser_automation_sleep_591f9a1b
+    scripts_e2e_browser_automation_main_waitforagent_6c97cfb7 -->|calls| scripts_e2e_browser_automation_sleep_591f9a1b
+    scripts_e2e_browser_automation_waitforserver_46ae1622 -->|calls| scripts_e2e_browser_automation_sleep_591f9a1b
+    scripts_chrome_daemon_b96360cd -->|imports| ref_child_process_a097a181
+    scripts_chrome_daemon_b96360cd -->|imports| ref_fs_8204e0dd
+    scripts_chrome_daemon_b96360cd -->|imports| ref_path_6ea4f7de
+    scripts_chrome_daemon_b96360cd -->|imports| ref_os_7d96cb2f
+    scripts_e2e_browser_automation_982d6ee9 -->|imports| ref_child_process_a097a181
+    scripts_e2e_browser_automation_982d6ee9 -->|imports| ref_fs_8204e0dd
+    scripts_e2e_browser_automation_982d6ee9 -->|imports| ref_path_6ea4f7de
+    scripts_e2e_browser_automation_982d6ee9 -->|imports| ref_os_7d96cb2f
+    %% Omitted for readability: 4 nodes, 0 edges
+    class scripts_e2e_browser_automation_cdpclient_16b41ab2 entry;
+    class scripts_e2e_browser_automation_982d6ee9 function;
+    class scripts_e2e_browser_automation_main_5bd4e2cb function;
+    class scripts_e2e_browser_automation_main_submitchatme_0c3dec71 function;
+    class scripts_e2e_browser_automation_main_waitforagent_6c97cfb7 function;
+    class scripts_e2e_browser_automation_cdpclient_constru_550d0b8e function;
+    class scripts_e2e_browser_automation_cdpclient_send_d9a011e7 function;
+    class scripts_e2e_browser_automation_cdpclient_eval_702981c6 function;
+    class scripts_e2e_browser_automation_cdpclient_screens_87ab506a function;
+    class scripts_e2e_browser_automation_cdpclient_close_1cefda80 function;
+    class scripts_e2e_browser_automation_getchromepagewsur_ae96cd33 function;
+    class scripts_e2e_browser_automation_sleep_591f9a1b function;
+    class scripts_e2e_browser_automation_waitforserver_46ae1622 function;
+    class ref_child_process_a097a181 function;
+    class ref_fs_8204e0dd function;
+    class ref_path_6ea4f7de function;
+    class ref_os_7d96cb2f function;
+    class scripts_chrome_daemon_b96360cd function;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-cmd">Entry</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><code>close()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>constructor()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>eval()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br>+2 more</td>
+  <td>CDPClient node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>syncDevToolsPort()</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>syncDevToolsPort() node in scripts/chrome-daemon.mjs.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>.close()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>No direct outbound edge</td>
+  <td>.close() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>.constructor()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>No direct outbound edge</td>
+  <td>.constructor() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>.eval()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><code>send()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>.eval() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>.screenshot()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><code>send()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>.screenshot() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>.send()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>eval()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>screenshot()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>No direct outbound edge</td>
+  <td>.send() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>getChromePageWsUrl()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><code>sleep()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>Organizes documentation pages, navigation, or content lookup.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>main()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>CDPClient</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>getChromePageWsUrl()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>sleep()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br>+1 more</td>
+  <td>main() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>submitChatMessage()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>sleep()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>Supports retrieval-augmented Q&amp;A or streaming chat.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>waitForAgentTurn()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>sleep()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>Supports retrieval-augmented Q&amp;A or streaming chat.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>sleep()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>getChromePageWsUrl()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>main()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>submitChatMessage()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br>+2 more</td>
+  <td>No direct outbound edge</td>
+  <td>sleep() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>waitForServer()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>main()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><code>sleep()</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>waitForServer() node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>chrome-daemon.mjs</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ref_child_process</code><br><code>ref_fs</code><br><code>ref_os</code><br>+1 more</td>
+  <td>chrome-daemon.mjs node in scripts/chrome-daemon.mjs.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>proc</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>proc node in scripts/chrome-daemon.mjs.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>profileDir</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>profileDir node in scripts/chrome-daemon.mjs.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>e2e-browser-automation.mjs</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>ref_child_process</code><br><code>ref_fs</code><br><code>ref_os</code><br>+1 more</td>
+  <td>e2e-browser-automation.mjs node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>PUBLIC_DIR</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PUBLIC_DIR node in scripts/e2e-browser-automation.mjs.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>ref_child_process</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>chrome-daemon.mjs</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small><br><code>e2e-browser-automation.mjs</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_child_process node in project.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>ref_fs</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>chrome-daemon.mjs</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small><br><code>e2e-browser-automation.mjs</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>wallet.ts</code><br><small style="color:var(--muted)">my-agent/agent/wallet.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_fs node in project.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>ref_os</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>chrome-daemon.mjs</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small><br><code>e2e-browser-automation.mjs</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>wallet.ts</code><br><small style="color:var(--muted)">my-agent/agent/wallet.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_os node in project.</td>
+</tr>
+<tr>
+  <td>22</td>
+  <td><code>ref_path</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>chrome-daemon.mjs</code><br><small style="color:var(--muted)">scripts/chrome-daemon.mjs</small><br><code>e2e-browser-automation.mjs</code><br><small style="color:var(--muted)">scripts/e2e-browser-automation.mjs</small><br><code>wallet.ts</code><br><small style="color:var(--muted)">my-agent/agent/wallet.ts</small></td>
+  <td>No direct outbound edge</td>
+  <td>ref_path node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>scripts/e2e-browser-automation.mjs</code></td><td>14 nodes</td></tr>
+<tr><td><code>scripts/chrome-daemon.mjs</code></td><td>4 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x11, calls x10, imports x8, method x5. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 7. Contracts Bazaarescrowsol Users ====== -->
+<h2 id="contracts-bazaarescrowsol-users">7. Contracts Bazaarescrowsol Users</h2>
+<p>Contracts Bazaarescrowsol Users groups implementation around contracts, bazaarescrowsol, users, dell, mostly in contracts/BazaarEscrow.sol. This section covers 21 nodes and 20 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Contracts Bazaarescrowsol Users (21 nodes, 20 edges)
+    subgraph contracts_bazaarescrowsol_users_contracts_Bazaar_9d62b427["contracts/BazaarEscrow.sol"]
+        contracts_bazaarescrow_219bc3f5("BazaarEscrow.sol")
+        contracts_bazaarescrow_contract_bazaarescrow_d08d7a3a("BazaarEscrow<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_fun_58a1ab2d("isNonceConsumed()<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_con_ac811010("constructor()<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_fun_d1f8719d("settlePayment()<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_sta_4c89c3b5("PAYMENT_TYPEHASH<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_str_80d0530f("Payment<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_eve_2f3fa2f9("PaymentSettled<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_str_3b62ab28("amount<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_str_1bfdd390("asset<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_sta_1eabc61c("consumedNonces<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_str_98e33265("deadline<br/><small>contracts/BazaarEscrow.sol</small>")
+        contracts_bazaarescrow_contract_bazaarescrow_str_0487f5f2("from<br/><small>contracts/BazaarEscrow.sol</small>")
+    end
+    subgraph contracts_bazaarescrowsol_users_External_generat_cbd878ec["External / generated"]
+        c_users_dell_onedrive_desktop_project_agentmaxx_55deb20a("cryptography eip712 sol")
+        c_users_dell_onedrive_desktop_project_agentmaxx_3167adae("cryptography ecdsa sol")
+        c_users_dell_onedrive_desktop_project_agentmaxx_442ac95b("utils reentrancyguard sol")
+        solidity_type_eip712_d05049a8("EIP712")
+        solidity_type_reentrancyguard_e05f1066("ReentrancyGuard")
+    end
+    contracts_bazaarescrow_contract_bazaarescrow_d08d7a3a -->|method| contracts_bazaarescrow_contract_bazaarescrow_fun_58a1ab2d
+    contracts_bazaarescrow_contract_bazaarescrow_d08d7a3a -->|method| contracts_bazaarescrow_contract_bazaarescrow_con_ac811010
+    contracts_bazaarescrow_contract_bazaarescrow_d08d7a3a -->|method| contracts_bazaarescrow_contract_bazaarescrow_fun_d1f8719d
+    contracts_bazaarescrow_219bc3f5 -->|imports| c_users_dell_onedrive_desktop_project_agentmaxx_55deb20a
+    contracts_bazaarescrow_219bc3f5 -->|imports| c_users_dell_onedrive_desktop_project_agentmaxx_3167adae
+    contracts_bazaarescrow_219bc3f5 -->|imports| c_users_dell_onedrive_desktop_project_agentmaxx_442ac95b
+    %% Omitted for readability: 3 nodes, 0 edges
+    class contracts_bazaarescrow_219bc3f5 klass;
+    class contracts_bazaarescrow_contract_bazaarescrow_d08d7a3a klass;
+    class contracts_bazaarescrow_contract_bazaarescrow_fun_58a1ab2d function;
+    class contracts_bazaarescrow_contract_bazaarescrow_con_ac811010 function;
+    class contracts_bazaarescrow_contract_bazaarescrow_fun_d1f8719d function;
+    class contracts_bazaarescrow_contract_bazaarescrow_sta_4c89c3b5 klass;
+    class contracts_bazaarescrow_contract_bazaarescrow_str_80d0530f klass;
+    class contracts_bazaarescrow_contract_bazaarescrow_eve_2f3fa2f9 klass;
+    class contracts_bazaarescrow_contract_bazaarescrow_str_3b62ab28 function;
+    class contracts_bazaarescrow_contract_bazaarescrow_str_1bfdd390 async;
+    class contracts_bazaarescrow_contract_bazaarescrow_sta_1eabc61c function;
+    class contracts_bazaarescrow_contract_bazaarescrow_str_98e33265 function;
+    class contracts_bazaarescrow_contract_bazaarescrow_str_0487f5f2 function;
+    class c_users_dell_onedrive_desktop_project_agentmaxx_55deb20a function;
+    class c_users_dell_onedrive_desktop_project_agentmaxx_3167adae function;
+    class c_users_dell_onedrive_desktop_project_agentmaxx_442ac95b function;
+    class solidity_type_eip712_d05049a8 klass;
+    class solidity_type_reentrancyguard_e05f1066 klass;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>BazaarEscrow</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>constructor()</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small><br><code>isNonceConsumed()</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small><br><code>settlePayment()</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>BazaarEscrow node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>constructor()</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BazaarEscrow</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>No direct outbound edge</td>
+  <td>constructor() node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>isNonceConsumed()</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BazaarEscrow</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>No direct outbound edge</td>
+  <td>isNonceConsumed() node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>settlePayment()</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BazaarEscrow</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>No direct outbound edge</td>
+  <td>settlePayment() node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>BazaarEscrow.sol</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td><code>cryptography ecdsa sol</code><br><code>cryptography eip712 sol</code><br><code>utils reentrancyguard sol</code></td>
+  <td>BazaarEscrow.sol node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>PaymentSettled</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>PaymentSettled node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>consumedNonces</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>consumedNonces node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>PAYMENT_TYPEHASH</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Caches analysis results or computes cache keys.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>Payment</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Payment node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>amount</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>amount node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>asset</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-async">Async</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>asset node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>12</td>
+  <td><code>deadline</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>deadline node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>13</td>
+  <td><code>from</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>from node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><code>nonce</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>nonce node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>15</td>
+  <td><code>resource</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>resource node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>16</td>
+  <td><code>to</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>to node in contracts/BazaarEscrow.sol.</td>
+</tr>
+<tr>
+  <td>17</td>
+  <td><code>EIP712</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>EIP712 node in project.</td>
+</tr>
+<tr>
+  <td>18</td>
+  <td><code>ReentrancyGuard</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-class">Class</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>ReentrancyGuard node in project.</td>
+</tr>
+<tr>
+  <td>19</td>
+  <td><code>c_users_dell_onedrive_desktop_project_agentmaxx_contracts_openzeppelin_contracts_utils_cryptography_ecdsa_sol</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BazaarEscrow.sol</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>No direct outbound edge</td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>20</td>
+  <td><code>c_users_dell_onedrive_desktop_project_agentmaxx_contracts_openzeppelin_contracts_utils_cryptography_eip712_sol</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BazaarEscrow.sol</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>No direct outbound edge</td>
+  <td>Builds dependency relationships and graph data.</td>
+</tr>
+<tr>
+  <td>21</td>
+  <td><code>c_users_dell_onedrive_desktop_project_agentmaxx_contracts_openzeppelin_contracts_utils_reentrancyguard_sol</code><br><small style="color:var(--muted)"></small></td>
+  <td><span class="tag tag-func">Function</span></td>
+  <td><code>BazaarEscrow.sol</code><br><small style="color:var(--muted)">contracts/BazaarEscrow.sol</small></td>
+  <td>No direct outbound edge</td>
+  <td>c_users_dell_onedrive_desktop_project_agentmaxx_contracts_openzeppelin_contracts_utils_reentrancyguard_sol node in project.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>contracts/BazaarEscrow.sol</code></td><td>16 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x12, method x3, imports x3, inherits x2. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 8. Deploymentmd Deployment Link ====== -->
+<h2 id="deploymentmd-deployment-link">8. Deploymentmd Deployment Link</h2>
+<p>Deploymentmd Deployment Link groups implementation around deploymentmd, deployment, link, ready, mostly in DEPLOYMENT.md. This section covers 11 nodes and 10 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Deploymentmd Deployment Link (11 nodes, 10 edges)
+    deployment_deployment_production_readiness_guide_1459f1e6("Deployment &amp; Production Readiness Guide<br/><small>DEPLOYMENT.md</small>")
+    deployment_how_to_obtain_a_working_ai_agent_link_34514d86("🔗 How to Obtain a Working AI Agent Link<br/><small>DEPLOYMENT.md</small>")
+    deployment_7233fb36("DEPLOYMENT.md")
+    deployment_evaluation_summary_is_the_project_rea_1975fee5("📋 Evaluation Summary: Is the Project Re...<br/><small>DEPLOYMENT.md</small>")
+    deployment_pre_deployment_verification_checklist_0756ae84("✅ Pre-Deployment Verification Checklist<br/><small>DEPLOYMENT.md</small>")
+    deployment_environment_variables_reference_a7ecefea("🔐 Environment Variables Reference<br/><small>DEPLOYMENT.md</small>")
+    deployment_1_local_link_immediate_9d994b1a("1. Local Link (Immediate)<br/><small>DEPLOYMENT.md</small>")
+    deployment_2_live_public_link_vercel_2_minutes_14fb5c69("2. Live Public Link (Vercel - 2 Minutes)<br/><small>DEPLOYMENT.md</small>")
+    deployment_3_alternative_netlify_deployment_0f4fff0b("3. Alternative: Netlify Deployment<br/><small>DEPLOYMENT.md</small>")
+    deployment_4_docker_deployment_self_hosted_4068b3b3("4. Docker Deployment (Self-Hosted)<br/><small>DEPLOYMENT.md</small>")
+    deployment_status_yes_ready_for_deployment_with_7762a6cd("Status: **YES, Ready for Deployment** (...<br/><small>DEPLOYMENT.md</small>")
+    deployment_7233fb36 -->|contains| deployment_deployment_production_readiness_guide_1459f1e6
+    deployment_deployment_production_readiness_guide_1459f1e6 -->|contains| deployment_pre_deployment_verification_checklist_0756ae84
+    deployment_deployment_production_readiness_guide_1459f1e6 -->|contains| deployment_how_to_obtain_a_working_ai_agent_link_34514d86
+    deployment_deployment_production_readiness_guide_1459f1e6 -->|contains| deployment_evaluation_summary_is_the_project_rea_1975fee5
+    deployment_deployment_production_readiness_guide_1459f1e6 -->|contains| deployment_environment_variables_reference_a7ecefea
+    deployment_evaluation_summary_is_the_project_rea_1975fee5 -->|contains| deployment_status_yes_ready_for_deployment_with_7762a6cd
+    deployment_how_to_obtain_a_working_ai_agent_link_34514d86 -->|contains| deployment_1_local_link_immediate_9d994b1a
+    deployment_how_to_obtain_a_working_ai_agent_link_34514d86 -->|contains| deployment_2_live_public_link_vercel_2_minutes_14fb5c69
+    deployment_how_to_obtain_a_working_ai_agent_link_34514d86 -->|contains| deployment_3_alternative_netlify_deployment_0f4fff0b
+    deployment_how_to_obtain_a_working_ai_agent_link_34514d86 -->|contains| deployment_4_docker_deployment_self_hosted_4068b3b3
+    class deployment_deployment_production_readiness_guide_1459f1e6 concept;
+    class deployment_how_to_obtain_a_working_ai_agent_link_34514d86 concept;
+    class deployment_7233fb36 concept;
+    class deployment_evaluation_summary_is_the_project_rea_1975fee5 concept;
+    class deployment_pre_deployment_verification_checklist_0756ae84 concept;
+    class deployment_environment_variables_reference_a7ecefea concept;
+    class deployment_1_local_link_immediate_9d994b1a concept;
+    class deployment_2_live_public_link_vercel_2_minutes_14fb5c69 concept;
+    class deployment_3_alternative_netlify_deployment_0f4fff0b concept;
+    class deployment_4_docker_deployment_self_hosted_4068b3b3 concept;
+    class deployment_status_yes_ready_for_deployment_with_7762a6cd concept;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>DEPLOYMENT.md</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing DEPLOYMENT.md.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>1. Local Link (Immediate)</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 1. Local Link (Immediate).</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><code>2. Live Public Link (Vercel - 2 Minutes)</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 2. Live Public Link (Vercel - 2 Minutes).</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td><code>3. Alternative: Netlify Deployment</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 3. Alternative: Netlify Deployment.</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td><code>4. Docker Deployment (Self-Hosted)</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 4. Docker Deployment (Self-Hosted).</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td><code>Deployment &amp; Production Readiness Guide</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Deployment &amp; Production Readiness Guide.</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td><code>🔐 Environment Variables Reference</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🔐 Environment Variables Reference.</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><code>📋 Evaluation Summary: Is the Project Ready for Deployment?</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 📋 Evaluation Summary: Is the Project Ready for Deployment?.</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td><code>🔗 How to Obtain a Working AI Agent Link</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing 🔗 How to Obtain a Working AI Agent Link.</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td><code>✅ Pre-Deployment Verification Checklist</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing ✅ Pre-Deployment Verification Checklist.</td>
+</tr>
+<tr>
+  <td>11</td>
+  <td><code>Status: **YES, Ready for Deployment** (with fixes applied)</code><br><small style="color:var(--muted)">DEPLOYMENT.md</small></td>
+  <td><span class="tag tag-func">Concept</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Documentation node describing Status: **YES, Ready for Deployment** (with fixes applied).</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>DEPLOYMENT.md</code></td><td>11 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: contains x10. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<!-- ====== 9. Hardhat Hardhatconfigjs ====== -->
+<h2 id="hardhat-hardhatconfigjs">9. Hardhat Hardhatconfigjs</h2>
+<p>Hardhat Hardhatconfigjs groups implementation around hardhat, hardhatconfigjs, mostly in hardhat, hardhat.config.js. This section covers 2 nodes and 1 internal edges; the diagram shows only representative relationships to stay readable.</p>
+
+<div class="mermaid">
+%%{init: {"theme": "dark", "themeVariables": {"fontSize": "15.0px", "fontFamily": "Segoe UI, system-ui, sans-serif", "primaryColor": "#1e293b", "primaryTextColor": "#e2e8f0", "primaryBorderColor": "#38bdf8", "secondaryColor": "#0f172a", "tertiaryColor": "#334155", "lineColor": "#64748b", "textColor": "#e2e8f0"}, "flowchart": {"htmlLabels": true, "curve": "basis", "nodeSpacing": 48, "rankSpacing": 64, "padding": 14, "diagramPadding": 10, "useMaxWidth": true}}}%%
+flowchart LR
+    %% Section: Hardhat Hardhatconfigjs (2 nodes, 1 edges)
+    hardhat_cc5d0ae7("hardhat")
+    hardhat_config_2bf7cfd8("hardhat.config.js")
+    hardhat_config_2bf7cfd8 -->|dynamic import| hardhat_cc5d0ae7
+    class hardhat_cc5d0ae7 module;
+    class hardhat_config_2bf7cfd8 module;
+    classDef entry fill:#422006,stroke:#fbbf24,color:#fde68a,stroke-width:1px;
+    classDef api fill:#450a0a,stroke:#f87171,color:#fee2e2,stroke-width:1px;
+    classDef async fill:#2e1065,stroke:#a78bfa,color:#ede9fe,stroke-width:1px;
+    classDef klass fill:#064e3b,stroke:#34d399,color:#d1fae5,stroke-width:1px;
+    classDef ui fill:#831843,stroke:#f472b6,color:#fce7f3,stroke-width:1px;
+    classDef module fill:#172554,stroke:#60a5fa,color:#dbeafe,stroke-width:1px;
+    classDef test fill:#3f3f46,stroke:#a1a1aa,color:#f4f4f5,stroke-width:1px;
+    classDef concept fill:#292524,stroke:#a8a29e,color:#fafaf9,stroke-dasharray:4 3;
+    classDef function fill:#0f172a,stroke:#38bdf8,color:#e0f2fe,stroke-width:1px;
+</div>
+
+<h3>Call Details</h3>
+<table class="call-table">
+<tr>
+  <th style="width:5%">#</th>
+  <th style="width:28%">Node</th>
+  <th style="width:10%">Type</th>
+  <th style="width:17%">Caller</th>
+  <th style="width:20%">Callees</th>
+  <th style="width:20%">Description</th>
+</tr>
+<tr>
+  <td>1</td>
+  <td><code>hardhat</code><br><small style="color:var(--muted)">hardhat</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>hardhat node in hardhat.</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><code>hardhat.config.js</code><br><small style="color:var(--muted)">hardhat.config.js</small></td>
+  <td><span class="tag tag-class">Module</span></td>
+  <td>External entry / no inbound edge</td>
+  <td>No direct outbound edge</td>
+  <td>Reads, resolves, or persists project configuration.</td>
+</tr>
+</table>
+
+<div class="grid">
+  <div class="card">
+    <h4>Key Files</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><th>File</th><th>Coverage</th></tr>
+      <tr><td><code>hardhat</code></td><td>1 nodes</td></tr>
+<tr><td><code>hardhat.config.js</code></td><td>1 nodes</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Design Notes</h4>
+    <p>This section comes from graphify community clustering. Relationship summary: dynamic import x1. The diagram prioritizes high-confidence calls or usage relationships; the table keeps the broader node inventory.</p>
+  </div>
+</div>
+<hr>
+
+<h2 id="stats">Project Statistics</h2>
+
+<div class="grid">
+  <div class="card">
+    <h4>Graph</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>Nodes</td><td>575</td></tr>
+      <tr><td>Edges</td><td>972</td></tr>
+      <tr><td>Hyperedges</td><td>0</td></tr>
+      <tr><td>Communities</td><td>28</td></tr>
+      <tr><td>Documented Sections</td><td>8</td></tr>
+    </table>
+  </div>
+  <div class="card">
+    <h4>Edge Confidence</h4>
+    <table style="width:100%;font-size:0.85rem;">
+      <tr><td>EXTRACTED</td><td>963</td></tr>
+      <tr><td>INFERRED</td><td>9</td></tr>
+      <tr><td>AMBIGUOUS</td><td>0</td></tr>
+    </table>
+  </div>
+</div>
+
+<div style="text-align:center; padding:40px 0; color: var(--muted); font-size:0.9rem;">
+  <p>agentmaxx — Architecture Documentation</p>
+  <p>Generated: 2026-10-31 10:22 UTC · graphify callflow-html</p>
+</div>
+
+</div><!-- .container -->
+
+<script>
+(function () {
+  const mermaidConfig = {
+    startOnLoad: false,
+    theme: 'dark',
+    securityLevel: 'loose',
+    flowchart: { htmlLabels: true, useMaxWidth: true },
+    themeVariables: {
+      primaryColor: '#1e293b',
+      primaryTextColor: '#e2e8f0',
+      primaryBorderColor: '#38bdf8',
+      secondaryColor: '#0f172a',
+      tertiaryColor: '#334155',
+      lineColor: '#64748b',
+      textColor: '#e2e8f0',
+    }
+  };
+
+  mermaid.initialize(mermaidConfig);
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function enhanceMermaidDiagrams() {
+    document.querySelectorAll('.mermaid').forEach((container) => {
+      if (container.dataset.zoomReady === 'true') return;
+      const svg = container.querySelector('svg');
+      if (!svg) return;
+
+      container.dataset.zoomReady = 'true';
+      container.classList.add('is-enhanced');
+
+      const viewport = document.createElement('div');
+      viewport.className = 'mermaid-viewport';
+      svg.parentNode.insertBefore(viewport, svg);
+      viewport.appendChild(svg);
+
+      const toolbar = document.createElement('div');
+      toolbar.className = 'mermaid-toolbar';
+      toolbar.innerHTML = [
+        '<button type="button" data-action="zoom-out" title="Zoom out">-</button>',
+        '<span class="zoom-level" data-role="level">100%</span>',
+        '<button type="button" data-action="zoom-in" title="Zoom in">+</button>',
+        '<button type="button" data-action="fit" title="Fit width">Fit</button>',
+        '<button type="button" data-action="reset" title="Reset view">Reset</button>'
+      ].join('');
+      container.insertBefore(toolbar, viewport);
+
+      const state = { scale: 1, x: 0, y: 0, dragging: false, startX: 0, startY: 0, originX: 0, originY: 0 };
+      const level = toolbar.querySelector('[data-role="level"]');
+
+      function applyTransform() {
+        svg.style.transform = `translate(${state.x}px, ${state.y}px) scale(${state.scale})`;
+        level.textContent = `${Math.round(state.scale * 100)}%`;
+      }
+
+      function zoomBy(delta) {
+        state.scale = clamp(state.scale + delta, 0.25, 3);
+        applyTransform();
+      }
+
+      function reset() {
+        state.scale = 1;
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      function fitWidth() {
+        const rawWidth = svg.viewBox && svg.viewBox.baseVal && svg.viewBox.baseVal.width
+          ? svg.viewBox.baseVal.width
+          : svg.getBoundingClientRect().width / state.scale;
+        if (!rawWidth) {
+          reset();
+          return;
+        }
+        state.scale = clamp((viewport.clientWidth - 48) / rawWidth, 0.25, 1.4);
+        state.x = 0;
+        state.y = 0;
+        applyTransform();
+      }
+
+      toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const action = button.dataset.action;
+        if (action === 'zoom-in') zoomBy(0.15);
+        if (action === 'zoom-out') zoomBy(-0.15);
+        if (action === 'fit') fitWidth();
+        if (action === 'reset') reset();
+      });
+
+      viewport.addEventListener('wheel', (event) => {
+        if (!event.ctrlKey && !event.metaKey) return;
+        event.preventDefault();
+        zoomBy(event.deltaY < 0 ? 0.1 : -0.1);
+      }, { passive: false });
+
+      viewport.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        state.dragging = true;
+        state.startX = event.clientX;
+        state.startY = event.clientY;
+        state.originX = state.x;
+        state.originY = state.y;
+        viewport.classList.add('is-dragging');
+        viewport.setPointerCapture(event.pointerId);
+      });
+
+      viewport.addEventListener('pointermove', (event) => {
+        if (!state.dragging) return;
+        state.x = state.originX + event.clientX - state.startX;
+        state.y = state.originY + event.clientY - state.startY;
+        applyTransform();
+      });
+
+      function endDrag(event) {
+        if (!state.dragging) return;
+        state.dragging = false;
+        viewport.classList.remove('is-dragging');
+        if (viewport.hasPointerCapture(event.pointerId)) {
+          viewport.releasePointerCapture(event.pointerId);
+        }
+      }
+
+      viewport.addEventListener('pointerup', endDrag);
+      viewport.addEventListener('pointercancel', endDrag);
+      applyTransform();
+    });
+  }
+
+  function renderMermaid() {
+    const result = mermaid.run
+      ? mermaid.run({ querySelector: '.mermaid' })
+      : Promise.resolve();
+    Promise.resolve(result)
+      .then(enhanceMermaidDiagrams)
+      .catch((error) => {
+        console.error('Mermaid render failed:', error);
+        enhanceMermaidDiagrams();
+      });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderMermaid);
+  } else {
+    renderMermaid();
+  }
+})();
+</script>
+
+</body>
+</html>
